@@ -8,6 +8,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ["backend_spmb.smktibazma.sch.id"],
   },
 }
 

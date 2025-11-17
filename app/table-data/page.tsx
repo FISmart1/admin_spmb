@@ -1,40 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import {
-  Check,
-  FileCheck2,
-  FolderX,
-  BadgeCheck,
-  X,
-  Download,
-  AlertCircle,
-  Clock4,
-  Send,
-  Eye,
-  Menu,
-} from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard-layout";
-import jsPDF from "jspdf";
-
-
-/**
- * Table Data (Data Diterima) - FINAL REVISI
- *
- * Perbaikan & fitur:
- * - UI persis seperti aslinya (cards, table, spacing, responsive)
- * - Semua alur ada di 1 page: Diterima | Tertolak | Disetujui
- * - Setujui: cek download -> minta konfirmasi "sudah membaca?" -> pindah ke Disetujui
- * - Tolak: input note -> Kirim Notifikasi -> pindah ke Tertolak (note disimpan)
- * - Disetujui: tombol Loloskan / Tidak Loloskan -> SIMPAN KE localStorage "app_dataAkhir_v1" SEGERA
- * - Mencegah duplikat di localStorage
- * - Realtime sync: page lain yang buka akan mendengar perubahan localStorage (storage event)
- * - Semua aksi punya modal konfirmasi
- *
- * Catatan:
- * - Semua data dummy (useState). localStorage digunakan hanya untuk menyimpan keputusan akhir.
- * - Kalau mau sambung ke backend/fungsi notifikasi asli, tinggal ganti bagian tempat komentar "TODO: API call".
- */
+import { useEffect, useState } from 'react';
+import { Check, FileCheck2, FolderX, BadgeCheck, X, Download, AlertCircle, Clock4, Send, Eye, Menu } from 'lucide-react';
+import { DashboardLayout } from '@/components/dashboard-layout';
+import jsPDF from 'jspdf';
 
 type Student = {
   id: number;
@@ -44,7 +13,7 @@ type Student = {
   nik: string;
   kontak: string;
   verified?: boolean;
-  status?: "diterima" | "tertolak" | "disetujui";
+  status?: 'diterima' | 'tertolak' | 'disetujui';
   note?: string;
 };
 
@@ -52,118 +21,104 @@ type FinalDecision = {
   id: number;
   nisn: string;
   nama: string;
-  keputusan: "lolos" | "tidak";
+  keputusan: 'lolos' | 'tidak';
 };
 
 export default function TableDataPage() {
-  // -------- initial dummy data (as original) --------
-  const [allDiterima, setAllDiterima] = useState<Student[]>([
-    {
-      id: 1,
-      nisn: "123456789",
-      nama: "Muhammad Iqbal Asqalani",
-      alamat: "Bekasi Barat, Kec. Medan Satria Kel. Kali Baru",
-      nik: "123456789",
-      kontak: "+62812-8888-8888",
-      verified: false,
-      status: "diterima",
-    },
-    {
-      id: 2,
-      nisn: "987654321",
-      nama: "Aisyah Nurhaliza",
-      alamat: "Bogor, Jawa Barat",
-      nik: "987654321",
-      kontak: "+62821-9999-0000",
-      verified: false,
-      status: "diterima",
-    },
-  ]);
-
-  // lists
+  const [allDiterima, setAllDiterima] = useState<Student[]>([]);
   const [tertolak, setTertolak] = useState<Student[]>([]);
   const [disetujui, setDisetujui] = useState<Student[]>([]);
-
-  // final decisions persisted in localStorage (app_dataAkhir_v1)
   const [dataAkhir, setDataAkhir] = useState<FinalDecision[]>(() => {
     try {
-      const raw = localStorage.getItem("app_dataAkhir_v1");
+      const raw = localStorage.getItem('app_dataAkhir_v1');
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
   });
 
-  // UI / modal / helpers states
-  const [activeFilter, setActiveFilter] = useState<
-    "diterima" | "tertolak" | "disetujui"
-  >("diterima");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<'diterima' | 'tertolak' | 'disetujui'>('diterima');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-
-  // modal flags
   const [showWarningDownload, setShowWarningDownload] = useState(false);
   const [showConfirmRead, setShowConfirmRead] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
-  const [noteInput, setNoteInput] = useState("");
+  const [noteInput, setNoteInput] = useState('');
   const [showTertolakConfirm, setShowTertolakConfirm] = useState(false);
-  const [showDecisionConfirm, setShowDecisionConfirm] = useState<
-    null | { decision: "lolos" | "tidak" }
-  >(null);
+  const [showDecisionConfirm, setShowDecisionConfirm] = useState<null | { decision: 'lolos' | 'tidak' }>(null);
   const [downloadedIds, setDownloadedIds] = useState<number[]>([]);
-
-  // ---------------- keep localStorage in sync ----------------
-  // write whenever dataAkhir changes (keeps persistence), but we also write directly
-  // inside confirmDecision for immediacy to avoid race conditions across tabs.
-  useEffect(() => {
-    try {
-      localStorage.setItem("app_dataAkhir_v1", JSON.stringify(dataAkhir));
-    } catch {
-      // ignore write errors
-    }
-  }, [dataAkhir]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (allDiterima.length > 0) {
-      sessionStorage.setItem("ppdb_diterima", JSON.stringify(allDiterima));
-    }
-  }, [allDiterima]);
+    async function loadData() {
+      try {
+        setIsLoading(true);
+        const res = await fetch('https://backend_spmb.smktibazma.sch.id/api/pendaftaran/user/full');
+        const data = await res.json();
 
-
-  // storage event listener: update dataAkhir when localStorage changed from other tab
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === "app_dataAkhir_v1") {
-        try {
-          const raw = e.newValue;
-          const parsed: FinalDecision[] = raw ? JSON.parse(raw) : [];
-          setDataAkhir(parsed);
-        } catch {
-          // ignore parse errors
+        if (!Array.isArray(data.data)) {
+          console.error('Format API salah:', data);
+          return;
         }
+
+        const diterimaArr: Student[] = [];
+        const tertolakArr: Student[] = [];
+        const disetujuiArr: Student[] = [];
+
+        data.data.forEach((item: any) => {
+          const status = item.user.validasi_pendaftaran;
+          const bio = item.bio;
+
+          const row: Student = {
+            id: item.user.id,
+            nisn: bio?.nisn || '-',
+            nama: bio?.fullName || item.user.name,
+            alamat: bio?.addressDetail || '-',
+            nik: bio?.nik || '-',
+            kontak: bio?.phone || '-',
+            status: 'diterima',
+          };
+
+          if (status === 'pending') {
+            row.status = 'tertolak';
+            tertolakArr.push(row);
+          } else if (status === 'sudah') {
+            row.status = 'disetujui';
+            disetujuiArr.push(row);
+          } else if (status === 'belum') {
+            row.status = 'diterima';
+            diterimaArr.push(row);
+          } else {
+            row.status = 'diterima';
+            diterimaArr.push(row);
+          }
+        });
+
+        setAllDiterima(diterimaArr);
+        setTertolak(tertolakArr);
+        setDisetujui(disetujuiArr);
+      } catch (err) {
+        console.error('Gagal fetch data:', err);
+      } finally {
+        setIsLoading(false);
       }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    }
+
+    loadData();
   }, []);
 
-  // ---------------- PDF download helper ----------------
+  // ... (useEffect untuk localStorage tetap sama)
+
   const handleDownloadPDF = (student: Student | null) => {
     if (!student) return;
     const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    doc.text("Data Siswa", 20, 20);
+    doc.text('Data Siswa', 20, 20);
 
-    doc.setFont("helvetica", "normal");
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
-    const data = [
-      `NISN: ${student.nisn}`,
-      `Nama: ${student.nama}`,
-      `Alamat: ${student.alamat}`,
-      `NIK: ${student.nik}`,
-      `Kontak: ${student.kontak}`,
-    ];
+    const data = [`NISN: ${student.nisn}`, `Nama: ${student.nama}`, `Alamat: ${student.alamat}`, `NIK: ${student.nik}`, `Kontak: ${student.kontak}`];
 
     let y = 40;
     data.forEach((line) => {
@@ -171,38 +126,22 @@ export default function TableDataPage() {
       y += 10;
     });
 
-    doc.save(`data_${student.nama.replace(/\s+/g, "_")}.pdf`);
+    doc.save(`data_${student.nama.replace(/\s+/g, '_')}.pdf`);
     setDownloadedIds((prev) => (prev.includes(student.id) ? prev : [...prev, student.id]));
   };
 
-  // ---------------- Filtered view logic ----------------
-  const diterimaList = allDiterima.filter((s) =>
-    [undefined, "diterima"].includes(s.status)
-  );
+  const diterimaList = allDiterima.filter((s) => [undefined, 'diterima'].includes(s.status));
 
   const filteredViewList =
-    activeFilter === "diterima"
-      ? diterimaList.filter(
-        (s) =>
-          s.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.nisn.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      : activeFilter === "tertolak"
-        ? tertolak.filter(
-          (s) =>
-            s.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            s.nisn.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : disetujui.filter(
-          (s) =>
-            s.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            s.nisn.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+    activeFilter === 'diterima'
+      ? diterimaList.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()))
+      : activeFilter === 'tertolak'
+      ? tertolak.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()))
+      : disetujui.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // ---------------- Setujui flow (download-check + confirm) ----------------
+  // ---------------- Setujui flow ----------------
   const handleSetujuiClicked = (student: Student) => {
     setSelectedStudent(student);
-    // show warning if not yet downloaded
     if (!downloadedIds.includes(student.id)) {
       setShowWarningDownload(true);
       return;
@@ -210,65 +149,168 @@ export default function TableDataPage() {
     setShowConfirmRead(true);
   };
 
-  const confirmSetujui = () => {
+  const confirmSetujui = async () => {
     if (!selectedStudent) return;
-    // move to disetujui
-    setDisetujui((prev) => [...prev, { ...selectedStudent, status: "disetujui" }]);
-    // remove from diterima list
-    setAllDiterima((prev) => prev.filter((s) => s.id !== selectedStudent.id));
-    setShowConfirmRead(false);
-    setSelectedStudent(null);
-    // optionally switch to disetujui view to show newly added
-    setActiveFilter("disetujui");
+
+    try {
+      // Update validasi_pendaftaran menjadi "sudah"
+      const res = await fetch('https://backend_spmb.smktibazma.sch.id/api/pendaftaran/validasi', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: selectedStudent.id,
+          validasi_pendaftaran: 'sudah',
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.error('Gagal update:', result);
+        alert('Gagal menyetujui data!');
+        return;
+      }
+
+      // Update state frontend
+      setDisetujui((prev) => [...prev, { ...selectedStudent, status: 'disetujui' }]);
+      setAllDiterima((prev) => prev.filter((s) => s.id !== selectedStudent.id));
+
+      setShowConfirmRead(false);
+      setSelectedStudent(null);
+      setActiveFilter('disetujui');
+
+      alert('Data berhasil disetujui!');
+    } catch (error) {
+      console.error('Error confirmSetujui:', error);
+      alert('Terjadi kesalahan server.');
+    }
   };
 
   // ---------------- Tolak flow ----------------
   const handleTolakClicked = (student: Student) => {
     setSelectedStudent(student);
-    setNoteInput(student.note ?? "");
+    setNoteInput(student.note ?? '');
     setShowNoteModal(true);
   };
 
-  const sendTolakWithNote = () => {
+  const sendTolakWithNote = async () => {
     if (!selectedStudent) return;
+
     const noteTrim = noteInput.trim();
-    if (!noteTrim) return;
+    if (!noteTrim) {
+      alert('Harap isi alasan penolakan!');
+      return;
+    }
 
-    // move to tertolak
-    setTertolak((prev) => [...prev, { ...selectedStudent, status: "tertolak", note: noteTrim }]);
-    setAllDiterima((prev) => prev.filter((s) => s.id !== selectedStudent.id));
+    try {
+      // Update validasi_pendaftaran menjadi "pending"
+      const updateRes = await fetch('https://backend_spmb.smktibazma.sch.id/api/pendaftaran/validasi', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: selectedStudent.id,
+          validasi_pendaftaran: 'pending',
+        }),
+      });
 
-    setShowNoteModal(false);
-    // open a confirm modal to simulate "kirim notif"
-    setShowTertolakConfirm(true);
-    setSelectedStudent(null);
-    setNoteInput("");
-    setActiveFilter("tertolak");
+      if (!updateRes.ok) {
+        const result = await updateRes.json();
+        console.error('Gagal update status:', result);
+        alert('Gagal mengupdate status data!');
+        return;
+      }
+
+      // Kirim notifikasi - PERBAIKAN: pastikan users_id dikirim sebagai number
+      try {
+        const notifRes = await fetch('https://backend_spmb.smktibazma.sch.id/notifikasi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: Number(selectedStudent.id), // Pastikan sebagai number
+            title: 'Pendaftaran Ditolak',
+            message: noteTrim,
+          }),
+        });
+
+        if (notifRes.ok) {
+          const notifResult = await notifRes.json();
+          console.log('Notifikasi berhasil dikirim:', notifResult);
+        } else {
+          const errorResult = await notifRes.json();
+          console.error('Gagal kirim notifikasi:', errorResult);
+        }
+      } catch (e) {
+        console.error('Gagal kirim notifikasi:', e);
+      }
+
+      // Update state frontend
+      setTertolak((prev) => [...prev, { ...selectedStudent, status: 'tertolak', note: noteTrim }]);
+      setAllDiterima((prev) => prev.filter((s) => s.id !== selectedStudent.id));
+
+      setShowNoteModal(false);
+      setShowTertolakConfirm(true);
+      setSelectedStudent(null);
+      setNoteInput('');
+      setActiveFilter('tertolak');
+    } catch (error) {
+      console.error('Error sendTolakWithNote:', error);
+      alert('Terjadi kesalahan server.');
+    }
   };
 
   const confirmSendNotifTolak = () => {
-    // TODO: API call to send notification
     setShowTertolakConfirm(false);
   };
 
   // edit note on tertolak
   const handleEditNoteTertolak = (student: Student) => {
     setSelectedStudent(student);
-    setNoteInput(student.note ?? "");
+    setNoteInput(student.note ?? '');
     setShowNoteModal(true);
   };
 
-  const saveEditedNoteTertolak = () => {
+  const saveEditedNoteTertolak = async () => {
     if (!selectedStudent) return;
     const noteTrim = noteInput.trim();
+
+    if (!noteTrim) {
+      alert('Harap isi catatan!');
+      return;
+    }
+
+    try {
+      // Kirim notifikasi dengan catatan yang diperbarui - PERBAIKAN: pastikan users_id dikirim sebagai number
+      const notifRes = await fetch('https://backend_spmb.smktibazma.sch.id/notifikasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: Number(selectedStudent.id), // Pastikan sebagai number
+          title: 'Pembaruan Status Pendaftaran',
+          message: noteTrim,
+        }),
+      });
+
+      if (notifRes.ok) {
+        const notifResult = await notifRes.json();
+        console.log('Notifikasi berhasil dikirim:', notifResult);
+      } else {
+        const errorResult = await notifRes.json();
+        console.error('Gagal kirim notifikasi:', errorResult);
+      }
+    } catch (e) {
+      console.error('Gagal kirim notifikasi:', e);
+    }
+
     setTertolak((prev) => prev.map((s) => (s.id === selectedStudent.id ? { ...s, note: noteTrim } : s)));
     setShowNoteModal(false);
     setSelectedStudent(null);
-    setNoteInput("");
+    setNoteInput('');
+
+    alert('Catatan berhasil diperbarui!');
   };
 
-  // ---------------- Disetujui -> Final Decision (lolos / tidak) ----------------
-  const handleDecisionOnDisetujui = (student: Student, decision: "lolos" | "tidak") => {
+  // ---------------- Disetujui -> Final Decision ----------------
+  const handleDecisionOnDisetujui = (student: Student, decision: 'lolos' | 'tidak') => {
     setSelectedStudent(student);
     setShowDecisionConfirm({ decision });
   };
@@ -278,7 +320,6 @@ export default function TableDataPage() {
 
     const keputusan = showDecisionConfirm.decision;
 
-    // remove student from lists to avoid reappearing
     setDisetujui((prev) => prev.filter((s) => s.id !== selectedStudent.id));
     setAllDiterima((prev) => prev.filter((s) => s.id !== selectedStudent.id));
     setTertolak((prev) => prev.filter((s) => s.id !== selectedStudent.id));
@@ -291,50 +332,43 @@ export default function TableDataPage() {
     };
 
     try {
-      // write directly to localStorage immediately (avoids race)
-      const raw = localStorage.getItem("app_dataAkhir_v1");
+      const raw = localStorage.getItem('app_dataAkhir_v1');
       const existing: FinalDecision[] = raw ? JSON.parse(raw) : [];
-      // remove any existing for same id, then add final
       const updated = [...existing.filter((d) => d.id !== final.id), final];
-      localStorage.setItem("app_dataAkhir_v1", JSON.stringify(updated));
-      // update component state to reflect persist change immediately
+      localStorage.setItem('app_dataAkhir_v1', JSON.stringify(updated));
       setDataAkhir(updated);
+
+      alert(`Siswa ${selectedStudent.nama} berhasil ditetapkan sebagai ${keputusan === 'lolos' ? 'LOLOS' : 'TIDAK LOLOS'}!`);
     } catch (e) {
-      console.error("Gagal menyimpan keputusan akhir:", e);
+      console.error('Gagal menyimpan keputusan akhir:', e);
+      alert('Gagal menyimpan keputusan akhir!');
     }
 
     setShowDecisionConfirm(null);
     setSelectedStudent(null);
-    // optionally switch to penerapan UI or leave view
   };
 
-  // helper getCardStyle (kept consistent with original)
-  const getCardStyle = (type: "diterima" | "tertolak" | "disetujui") => {
+  // ... (getCardStyle, CircleDecoration, counts, dan render UI tetap sama)
+  const getCardStyle = (type: 'diterima' | 'tertolak' | 'disetujui') => {
     const isActive = activeFilter === type;
     const colors = {
-      diterima: "#25A215",
-      tertolak: "#08979C",
-      disetujui: "#D97400",
+      diterima: '#25A215',
+      tertolak: '#08979C',
+      disetujui: '#D97400',
     } as Record<string, string>;
 
     return {
-      background: isActive ? "#208FEA" : "#FFFFFF",
-      color: isActive ? "#FFFFFF" : "#000000",
+      background: isActive ? '#208FEA' : '#FFFFFF',
+      color: isActive ? '#FFFFFF' : '#000000',
       borderLeft: `7px solid ${colors[type]}`,
-      boxShadow: "2px 2px 4px rgba(0,0,0,0.25)",
+      boxShadow: '2px 2px 4px rgba(0,0,0,0.25)',
     } as React.CSSProperties;
   };
 
   const CircleDecoration = ({ active }: { active: boolean }) => (
     <div className="absolute top-0 right-0 w-[140px] h-[140px] translate-x-1/2 -translate-y-1/3">
-      <div
-        className={`absolute w-[111px] h-[111px] rounded-full ${active ? "bg-white/20" : "bg-[#E3E2E2]"
-          }`}
-      ></div>
-      <div
-        className={`absolute left-[27px] top-[27px] w-[57px] h-[57px] rounded-full ${active ? "bg-white/30" : "bg-[#EEEEEE]"
-          }`}
-      ></div>
+      <div className={`absolute w-[111px] h-[111px] rounded-full ${active ? 'bg-white/20' : 'bg-[#E3E2E2]'}`}></div>
+      <div className={`absolute left-[27px] top-[27px] w-[57px] h-[57px] rounded-full ${active ? 'bg-white/30' : 'bg-[#EEEEEE]'}`}></div>
     </div>
   );
 
@@ -344,58 +378,43 @@ export default function TableDataPage() {
     disetujui: disetujui.length,
   };
 
-  // ---------------- Render UI ----------------
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardLayout />
 
       <div className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 md:p-6 md:ml-4 transition-all duration-300">
-        
         {/* Title */}
         <div className="sticky top-0 z-20 bg-gray-50/80 backdrop-blur-md border-b border-gray-200 mb-4 flex items-center gap-3">
-
-          {/* Hamburger Button (mobile only) */}
-          <button
-            onClick={() => document.dispatchEvent(new CustomEvent("toggle-sidebar"))}
-            className="md:hidden bg-[#1E3A8A] text-white p-2 rounded-md shadow"
-          >
+          <button onClick={() => document.dispatchEvent(new CustomEvent('toggle-sidebar'))} className="md:hidden bg-[#1E3A8A] text-white p-2 rounded-md shadow">
             <Menu className="h-6 w-6" />
           </button>
-
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold py-3">Dashboard / Table Data</h1>
         </div>
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 justify-items-center">
           {[
-            { type: "diterima", title: "Data Diterima", icon: FileCheck2, count: counts.diterima },
-            { type: "tertolak", title: "Data Tertolak", icon: FolderX, count: counts.tertolak },
-            { type: "disetujui", title: "Data Disetujui", icon: BadgeCheck, count: counts.disetujui },
+            { type: 'diterima', title: 'Data Diterima', icon: FileCheck2, count: counts.diterima },
+            { type: 'tertolak', title: 'Data Tertolak', icon: FolderX, count: counts.tertolak },
+            { type: 'disetujui', title: 'Data Disetujui', icon: BadgeCheck, count: counts.disetujui },
           ].map(({ type, title, icon: Icon, count }) => (
-            <button
-              key={type}
-              onClick={() => setActiveFilter(type as any)}
-              className="relative w-full sm:w-[360px] md:w-[380px] h-[150px] rounded-[10px] text-left transition overflow-hidden"
-              style={getCardStyle(type as any)}
-            >
+            <button key={type} onClick={() => setActiveFilter(type as any)} className="relative w-full sm:w-[360px] md:w-[380px] h-[150px] rounded-[10px] text-left transition overflow-hidden" style={getCardStyle(type as any)}>
               <div className="absolute left-6 top-5 flex items-center gap-4">
                 <div
                   className="w-11 h-11 rounded-[10px] flex items-center justify-center"
                   style={{
-                    backgroundColor: String(getCardStyle(type as any).borderLeft || "").split(" ")[2] || "#208FEA",
+                    backgroundColor: String(getCardStyle(type as any).borderLeft || '').split(' ')[2] || '#208FEA',
                   }}
                 >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className={`text-lg sm:text-xl font-semibold ${activeFilter === type ? "text-white" : "text-[#132B6D]"}`}>
-                    {title}
-                  </h3>
-                  <p className={`text-base ${activeFilter === type ? "text-white" : "text-black"}`}>{count} data</p>
+                  <h3 className={`text-lg sm:text-xl font-semibold ${activeFilter === type ? 'text-white' : 'text-[#132B6D]'}`}>{title}</h3>
+                  <p className={`text-base ${activeFilter === type ? 'text-white' : 'text-black'}`}>{count} data</p>
                 </div>
               </div>
               <CircleDecoration active={activeFilter === type} />
-              <span className={`absolute left-6 bottom-3 text-sm font-semibold ${activeFilter === type ? "text-white" : "text-gray-800"}`}>Selengkapnya →</span>
+              <span className={`absolute left-6 bottom-3 text-sm font-semibold ${activeFilter === type ? 'text-white' : 'text-gray-800'}`}>Selengkapnya →</span>
             </button>
           ))}
         </div>
@@ -404,9 +423,7 @@ export default function TableDataPage() {
         <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center bg-white shadow-md rounded-[10px] p-5 mb-6 gap-4 font-[Poppins]">
           <div className="flex flex-col items-start w-full sm:w-auto">
             <span className="text-[20px] font-medium text-[#292929]">Data Siswa</span>
-            <span className="text-sm text-gray-500 mt-1">
-              {activeFilter === "diterima" ? "Menampilkan data diterima" : activeFilter === "tertolak" ? "Menampilkan data tertolak" : "Menampilkan data disetujui"}
-            </span>
+            <span className="text-sm text-gray-500 mt-1">{activeFilter === 'diterima' ? 'Menampilkan data diterima' : activeFilter === 'tertolak' ? 'Menampilkan data tertolak' : 'Menampilkan data disetujui'}</span>
           </div>
 
           <div className="flex flex-row justify-end items-center gap-5 w-full sm:w-auto">
@@ -419,110 +436,150 @@ export default function TableDataPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <span className="ml-3 text-gray-600">Memuat data...</span>
+          </div>
+        )}
+
         {/* Table */}
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="min-w-full border-collapse text-sm sm:text-base">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-3 sm:px-4 py-2 text-left">NISN</th>
-                <th className="px-3 sm:px-4 py-2 text-left">Nama</th>
-                <th className="px-3 sm:px-4 py-2 text-left">Alamat</th>
-                <th className="px-3 sm:px-4 py-2 text-left">NIK</th>
-                <th className="px-3 sm:px-4 py-2 text-left">Kontak</th>
-                <th className="px-3 sm:px-4 py-2 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredViewList.map((s) => (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-gray-50 text-xs sm:text-sm">
-                  <td className="px-3 sm:px-4 py-2 font-mono text-green-600">{s.nisn}</td>
-                  <td className="px-3 sm:px-4 py-2">{s.nama}</td>
-                  <td className="px-3 sm:px-4 py-2 truncate max-w-[120px] sm:max-w-xs">{s.alamat}</td>
-                  <td className="px-3 sm:px-4 py-2">{s.nik}</td>
-                  <td className="px-3 sm:px-4 py-2">{s.kontak}</td>
-
-                  <td className="px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 justify-center flex-wrap">
-                    {activeFilter === "diterima" && (
-                      <>
-                        <button onClick={() => handleSetujuiClicked(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-500 text-white text-xs sm:text-sm rounded-lg hover:bg-green-600 transition">
-                          <Check className="w-3 h-3 sm:w-4 sm:h-4" /> Setujui
-                        </button>
-
-                        <button onClick={() => handleTolakClicked(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-yellow-500 text-white text-xs sm:text-sm rounded-lg hover:bg-yellow-600 transition">
-                          <Clock4 className="w-3 h-3 sm:w-4 sm:h-4" /> Tolak
-                        </button>
-
-                        <button onClick={() => { setSelectedStudent(s); handleDownloadPDF(s); }} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-yellow-100 text-yellow-700 text-xs sm:text-sm rounded-lg hover:bg-yellow-200 transition">
-                          <Download className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => window.location.href = `/table-data/${s.id}`} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition">
-                          <Eye className="w-4 h-4" />
-                        </button>
-
-                      </>
-                    )}
-
-                    {activeFilter === "tertolak" && (
-                      <>
-                        <button onClick={() => handleEditNoteTertolak(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-lg hover:bg-gray-200 transition">
-                          Edit Note
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setSelectedStudent(s);
-                            setShowTertolakConfirm(true);
-                          }}
-                          className={`flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-500 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-600 transition ${!s.note ? "opacity-60 cursor-not-allowed" : ""}`}
-                          disabled={!s.note}
-                        >
-                          <Send className="w-4 h-4" /> Kirim Notifikasi
-                        </button>
-                      </>
-                    )}
-
-                    {activeFilter === "disetujui" && (
-                      <>
-                        <button onClick={() => handleDecisionOnDisetujui(s, "lolos")} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-500 text-white text-xs sm:text-sm rounded-lg hover:bg-green-600 transition">
-                          Loloskan
-                        </button>
-                        <button onClick={() => handleDecisionOnDisetujui(s, "tidak")} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-500 text-white text-xs sm:text-sm rounded-lg hover:bg-red-600 transition">
-                          Tidak Loloskan
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-
-              {filteredViewList.length === 0 && (
+        {!isLoading && (
+          <div className="overflow-x-auto bg-white rounded-lg shadow">
+            <table className="min-w-full border-collapse text-sm sm:text-base">
+              <thead className="bg-gray-100">
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-gray-500">Tidak ada data</td>
+                  <th className="px-3 sm:px-4 py-2 text-left">NISN</th>
+                  <th className="px-3 sm:px-4 py-2 text-left">Nama</th>
+                  <th className="px-3 sm:px-4 py-2 text-left">Alamat</th>
+                  <th className="px-3 sm:px-4 py-2 text-left">NIK</th>
+                  <th className="px-3 sm:px-4 py-2 text-left">Kontak</th>
+                  <th className="px-3 sm:px-4 py-2 text-center">Action</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredViewList.map((s) => (
+                  <tr key={s.id} className="border-b last:border-0 hover:bg-gray-50 text-xs sm:text-sm">
+                    <td className="px-3 sm:px-4 py-2 font-mono text-green-600">{s.nisn}</td>
+                    <td className="px-3 sm:px-4 py-2">{s.nama}</td>
+                    <td className="px-3 sm:px-4 py-2 truncate max-w-[120px] sm:max-w-xs">{s.alamat}</td>
+                    <td className="px-3 sm:px-4 py-2">{s.nik}</td>
+                    <td className="px-3 sm:px-4 py-2">{s.kontak}</td>
 
-        {/* ========================= MODALS ========================= */}
+                    <td className="px-3 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 justify-center flex-wrap">
+                      {activeFilter === 'diterima' && (
+                        <>
+                          <button onClick={() => handleSetujuiClicked(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-500 text-white text-xs sm:text-sm rounded-lg hover:bg-green-600 transition">
+                            <Check className="w-3 h-3 sm:w-4 sm:h-4" /> Setujui
+                          </button>
 
-        {/* Warning: belum download */}
+                          <button onClick={() => handleTolakClicked(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-yellow-500 text-white text-xs sm:text-sm rounded-lg hover:bg-yellow-600 transition">
+                            <Clock4 className="w-3 h-3 sm:w-4 sm:h-4" /> Tolak
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(s);
+                              handleDownloadPDF(s);
+                            }}
+                            className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-yellow-100 text-yellow-700 text-xs sm:text-sm rounded-lg hover:bg-yellow-200 transition"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
+                              window.location.href = `/table-data/${s.id}`;
+                            }}
+                            className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+
+                      {activeFilter === 'tertolak' && (
+                        <>
+                          <button onClick={() => handleEditNoteTertolak(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-lg hover:bg-gray-200 transition">
+                            Edit Note
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(s);
+                              setShowTertolakConfirm(true);
+                            }}
+                            className={`flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-500 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-600 transition ${!s.note ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            disabled={!s.note}
+                          >
+                            <Send className="w-4 h-4" /> Kirim Ulang Notifikasi
+                          </button>
+                          <button onClick={() => handleSetujuiClicked(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-500 text-white text-xs sm:text-sm rounded-lg hover:bg-green-600 transition">
+                            <Check className="w-3 h-3 sm:w-4 sm:h-4" /> Setujui
+                          </button>
+                          <button
+                            onClick={() => {
+                              sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
+                              window.location.href = `/table-data/${s.id}`;
+                            }}
+                            className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+
+                      {activeFilter === 'disetujui' && (
+                        <>
+                          <button onClick={() => handleDecisionOnDisetujui(s, 'lolos')} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-500 text-white text-xs sm:text-sm rounded-lg hover:bg-green-600 transition">
+                            Loloskan
+                          </button>
+                          <button onClick={() => handleDecisionOnDisetujui(s, 'tidak')} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-red-500 text-white text-xs sm:text-sm rounded-lg hover:bg-red-600 transition">
+                            Tidak Loloskan
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+
+                {filteredViewList.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-4 text-center text-gray-500">
+                      Tidak ada data
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Modal components tetap sama seperti sebelumnya */}
         {showWarningDownload && selectedStudent && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md p-6 relative">
               <button onClick={() => setShowWarningDownload(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
-
               <div className="flex flex-col items-center text-center">
                 <AlertCircle className="w-10 h-10 text-yellow-500 mb-3" />
                 <h2 className="text-lg font-semibold text-[#132B6D] mb-2">Anda belum mendownload data!</h2>
                 <p className="text-gray-600 text-sm mb-4">Silakan download dan baca terlebih dahulu file PDF data siswa sebelum melakukan verifikasi.</p>
                 <div className="flex justify-center gap-3">
-                  <button onClick={() => setShowWarningDownload(false)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">Batal</button>
-                  <button onClick={() => { handleDownloadPDF(selectedStudent); setShowWarningDownload(false); setShowConfirmRead(true); }} className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition">
+                  <button onClick={() => setShowWarningDownload(false)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDownloadPDF(selectedStudent);
+                      setShowWarningDownload(false);
+                      setShowConfirmRead(true);
+                    }}
+                    className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition"
+                  >
                     <Download className="w-4 h-4" /> Download Sekarang
                   </button>
                 </div>
@@ -531,48 +588,68 @@ export default function TableDataPage() {
           </div>
         )}
 
-        {/* Confirm after download: only ask "sudah membaca?" */}
         {showConfirmRead && selectedStudent && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md p-6 relative text-center">
               <button onClick={() => setShowConfirmRead(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
-
               <h2 className="text-lg font-semibold text-[#132B6D] mb-4">Sudahkah Anda membaca data siswa ini?</h2>
               <p className="text-gray-600 text-sm mb-6">Pastikan Anda telah meninjau seluruh informasi pada file PDF sebelum menyetujui.</p>
-
               <div className="flex justify-center gap-3">
-                <button onClick={() => setShowConfirmRead(false)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">Batal</button>
-                <button onClick={confirmSetujui} className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Ya, Sudah Baca</button>
+                <button onClick={() => setShowConfirmRead(false)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                  Batal
+                </button>
+                <button onClick={confirmSetujui} className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">
+                  Ya, Sudah Baca
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Note Modal (Tolak / Edit note) */}
         {showNoteModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md p-6 relative">
-              <button onClick={() => { setShowNoteModal(false); setSelectedStudent(null); setNoteInput(""); }} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => {
+                  setShowNoteModal(false);
+                  setSelectedStudent(null);
+                  setNoteInput('');
+                }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
                 <X className="w-5 h-5" />
               </button>
-
-              <h2 className="text-lg font-semibold text-[#132B6D] mb-4">Tolak Data Siswa</h2>
-              <p className="text-gray-600 text-sm mb-3">Tulis alasan atau catatan kenapa data ini ditolak:</p>
-
+              <h2 className="text-lg font-semibold text-[#132B6D] mb-4">{selectedStudent && tertolak.some((t) => t.id === selectedStudent.id) ? 'Edit Catatan Penolakan' : 'Tolak Data Siswa'}</h2>
+              <p className="text-gray-600 text-sm mb-3">{selectedStudent && tertolak.some((t) => t.id === selectedStudent.id) ? 'Edit alasan atau catatan penolakan:' : 'Tulis alasan atau catatan kenapa data ini ditolak:'}</p>
               <textarea value={noteInput} onChange={(e) => setNoteInput(e.target.value)} placeholder="Tuliskan catatan di sini..." className="w-full border border-gray-300 rounded-lg p-3 text-sm mb-4" rows={4} />
-
               <div className="flex justify-end gap-3">
-                <button onClick={() => { setShowNoteModal(false); setSelectedStudent(null); setNoteInput(""); }} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">Batal</button>
-
+                <button
+                  onClick={() => {
+                    setShowNoteModal(false);
+                    setSelectedStudent(null);
+                    setNoteInput('');
+                  }}
+                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+                >
+                  Batal
+                </button>
                 {selectedStudent && tertolak.some((t) => t.id === selectedStudent.id) ? (
-                  <button onClick={saveEditedNoteTertolak} disabled={!noteInput.trim()} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${noteInput.trim() ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}>
+                  <button
+                    onClick={saveEditedNoteTertolak}
+                    disabled={!noteInput.trim()}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${noteInput.trim() ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
+                  >
                     Simpan Note
                   </button>
                 ) : (
-                  <button onClick={sendTolakWithNote} disabled={!noteInput.trim()} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${noteInput.trim() ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-300 text-gray-600 cursor-not-allowed"}`}>
-                    <Send className="w-4 h-4" /> Kirim Notifikasi
+                  <button
+                    onClick={sendTolakWithNote}
+                    disabled={!noteInput.trim()}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${noteInput.trim() ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
+                  >
+                    <Send className="w-4 h-4" /> Tolak & Kirim Notifikasi
                   </button>
                 )}
               </div>
@@ -580,46 +657,58 @@ export default function TableDataPage() {
           </div>
         )}
 
-        {/* Tertolak send confirmation */}
         {showTertolakConfirm && selectedStudent && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md p-6 relative text-center">
-              <button onClick={() => { setShowTertolakConfirm(false); setSelectedStudent(null); }} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => {
+                  setShowTertolakConfirm(false);
+                  setSelectedStudent(null);
+                }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              >
                 <X className="w-5 h-5" />
               </button>
-
-              <h2 className="text-lg font-semibold text-[#132B6D] mb-4">Kirim Notifikasi</h2>
-              <p className="text-gray-600 text-sm mb-6">Apakah Anda ingin mengirim notifikasi ke <span className="font-semibold text-gray-800">{selectedStudent?.nama}</span> mengenai alasan penundaan?</p>
-
+              <h2 className="text-lg font-semibold text-[#132B6D] mb-4">Notifikasi Terkirim</h2>
+              <p className="text-gray-600 text-sm mb-6">
+                Notifikasi telah dikirim ke <span className="font-semibold text-gray-800">{selectedStudent?.nama}</span> mengenai alasan penolakan.
+              </p>
               <div className="flex justify-center gap-3">
-                <button onClick={() => { setShowTertolakConfirm(false); setSelectedStudent(null); }} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">Batal</button>
-                <button onClick={() => { confirmSendNotifTolak(); setShowTertolakConfirm(false); }} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">Kirim</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Decision confirm (disetujui -> lolos/tidak) */}
-        {showDecisionConfirm && selectedStudent && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md p-6 relative text-center">
-              <button onClick={() => setShowDecisionConfirm(null)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-
-              <h2 className="text-lg font-semibold text-[#132B6D] mb-4">{showDecisionConfirm.decision === "lolos" ? "Konfirmasi Loloskan" : "Konfirmasi Tidak Loloskan"}</h2>
-              <p className="text-gray-600 text-sm mb-6">Apakah Anda yakin ingin menetapkan status <span className="font-semibold">{showDecisionConfirm.decision === "lolos" ? "LOLOS" : "TIDAK LOLOS"}</span> untuk <span className="font-semibold">{selectedStudent.nama}</span>?</p>
-
-              <div className="flex justify-center gap-3">
-                <button onClick={() => setShowDecisionConfirm(null)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">Batal</button>
-                <button onClick={confirmDecision} className={`px-4 py-2 rounded-lg text-white ${showDecisionConfirm.decision === "lolos" ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}>{showDecisionConfirm.decision === "lolos" ? "Loloskan" : "Tidak Loloskan"}
+                <button
+                  onClick={() => {
+                    setShowTertolakConfirm(false);
+                    setSelectedStudent(null);
+                  }}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                >
+                  Tutup
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* End modals */}
+        {showDecisionConfirm && selectedStudent && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md p-6 relative text-center">
+              <button onClick={() => setShowDecisionConfirm(null)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+              <h2 className="text-lg font-semibold text-[#132B6D] mb-4">{showDecisionConfirm.decision === 'lolos' ? 'Konfirmasi Loloskan' : 'Konfirmasi Tidak Loloskan'}</h2>
+              <p className="text-gray-600 text-sm mb-6">
+                Apakah Anda yakin ingin menetapkan status <span className="font-semibold">{showDecisionConfirm.decision === 'lolos' ? 'LOLOS' : 'TIDAK LOLOS'}</span> untuk <span className="font-semibold">{selectedStudent.nama}</span>?
+              </p>
+              <div className="flex justify-center gap-3">
+                <button onClick={() => setShowDecisionConfirm(null)} className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                  Batal
+                </button>
+                <button onClick={confirmDecision} className={`px-4 py-2 rounded-lg text-white ${showDecisionConfirm.decision === 'lolos' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}>
+                  {showDecisionConfirm.decision === 'lolos' ? 'Loloskan' : 'Tidak Loloskan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
