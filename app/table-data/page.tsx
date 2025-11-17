@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Check, FileCheck2, FolderX, BadgeCheck, X, Download, AlertCircle, Clock4, Send, Eye, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 type Student = {
   id: number;
@@ -15,6 +17,57 @@ type Student = {
   verified?: boolean;
   status?: 'diterima' | 'tertolak' | 'disetujui';
   note?: string;
+  birthPlace: string;
+  birthDate: string;
+  address: string;
+  schoolOrigin: string;
+
+  fatherName: string;
+  fatherJob: string;
+  motherName: string;
+  motherJob: string;
+  parentAddress: string;
+
+  achievementField: string;
+  achievementName: string;
+  achievementLevel: string;
+  majorInterest: string;
+
+  houseType: string;
+  houseStatus: string;
+  waterSource: string;
+  electricity: string;
+
+  bloodType: string;
+  weight: string;
+  height: string;
+  butawarna: string;
+  penyakitMenular: string;
+  penyakitNonMenular: string;
+  foto: string;
+  rapor: string;
+  rumah_depan: string;
+  ruangTamu: string;
+  kamar: string;
+  sktm: string;
+  ss_ig: string;
+  kk: string;
+  kip: string;
+  bpjs: string;
+  rekomendasi_surat: string;
+  tagihan_listrik: string;
+  reels: string;
+  mat3: number;
+  mat4: number;
+  indo3: number;
+  indo4: number;
+  eng3: number;
+  eng4: number;
+  ipa3: number;
+  ipa4: number;
+  pai3: number;
+  pai4: number;
+  rulesAgreement: boolean;
 };
 
 type FinalDecision = {
@@ -378,6 +431,46 @@ export default function TableDataPage() {
     disetujui: disetujui.length,
   };
 
+  const exportToExcel = () => {
+    const dataToExport = filteredViewList.map((s) => ({
+      NISN: s.nisn,
+      Nama: s.nama,
+      Alamat: s.alamat,
+      NIK: s.nik,
+      Kontak: s.kontak,
+      Status: s.status || '-',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+    saveAs(data, `data_siswa_${activeFilter}.xlsx`);
+  };
+
+  const exportAllData = () => {
+    const combined = [...allDiterima.map((s) => ({ ...s, kategori: 'Diterima' })), ...tertolak.map((s) => ({ ...s, kategori: 'Tertolak' })), ...disetujui.map((s) => ({ ...s, kategori: 'Disetujui' }))];
+
+    const dataToExport = combined.map((s) => ({
+      NISN: s.nisn,
+      Nama: s.nama,
+      Alamat: s.alamat,
+      NIK: s.nik,
+      Kontak: s.kontak,
+      Kategori: s.kategori,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+    saveAs(data, `data_semua_siswa.xlsx`);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardLayout />
@@ -433,6 +526,12 @@ export default function TableDataPage() {
               </svg>
               <input type="text" placeholder="Cari siswa..." className="bg-transparent outline-none w-full text-[13px] text-gray-700 placeholder:text-gray-500" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
+            <button onClick={exportToExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm">
+              Export Excel
+            </button>
+            <button onClick={exportAllData} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+              Export Semua Data
+            </button>
           </div>
         </div>
 
