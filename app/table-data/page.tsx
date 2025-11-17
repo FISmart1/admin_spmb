@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Check, FileCheck2, FolderX, BadgeCheck, X, Download, AlertCircle, Clock4, Send, Eye, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
 type Student = {
@@ -450,7 +449,11 @@ export default function TableDataPage() {
     saveAs(data, `data_siswa_${activeFilter}.xlsx`);
   };
 
-  const exportAllData = () => {
+  const exportAllData = async () => {
+    // import XLSX hanya di client
+    const XLSX = await import('xlsx');
+    const { saveAs } = await import('file-saver');
+
     const combined = [...allDiterima.map((s) => ({ ...s, kategori: 'Diterima' })), ...tertolak.map((s) => ({ ...s, kategori: 'Tertolak' })), ...disetujui.map((s) => ({ ...s, kategori: 'Disetujui' }))];
 
     const dataToExport = combined.map((s) => ({
@@ -466,9 +469,9 @@ export default function TableDataPage() {
     const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    const fileData = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
-    saveAs(data, `data_semua_siswa.xlsx`);
+    saveAs(fileData, 'data_semua_siswa.xlsx');
   };
 
   return (
