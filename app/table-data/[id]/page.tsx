@@ -21,6 +21,7 @@ interface StudentFull {
   motherName: string;
   motherJob: string;
   phone: string;
+  phone2: string;
   parentAddress: string;
 
   achievementField: string;
@@ -52,7 +53,16 @@ interface StudentFull {
   rekomendasi_surat: string;
   tagihan_listrik: string;
   reels: string;
-
+  mat3: number;
+  mat4: number;
+  indo3: number;
+  indo4: number;
+  eng3: number;
+  eng4: number;
+  ipa3: number;
+  ipa4: number;
+  pai3: number;
+  pai4: number;
   rulesAgreement: boolean;
 }
 
@@ -92,6 +102,7 @@ export default function StudentDetail() {
         motherName: data.orangtua?.ibu_nama,
         motherJob: data.orangtua?.ibu_pekerjaan,
         phone: data.orangtua?.ayah_telepon,
+        phone2: data.orangtua?.ibu_telepon,
         parentAddress: data.orangtua?.ayah_alamat,
 
         achievementField: data.pres?.achievement,
@@ -122,8 +133,17 @@ export default function StudentDetail() {
         bpjs: data.berkas?.bpjs,
         rekomendasi_surat: data.berkas?.rekomendasi_surat,
         tagihan_listrik: data.berkas?.tagihan_listrik,
-        reels: data.berkas?.tagihan_reels,
-
+        reels: data.berkas?.reels,
+        mat3: data.pres?.math_s3,
+        mat4: data.pres?.math_s4,
+        indo3: data.pres?.indo_s3,
+        indo4: data.pres?.indo_s4,
+        eng3: data.pres?.english_s3,
+        eng4: data.pres?.english_s4,
+        ipa3: data.pres?.ipa_s3,
+        ipa4: data.pres?.ipa_s4,
+        pai3: data.pres?.pai_s3,
+        pai4: data.pres?.pai_s4,
         rulesAgreement: data.aturan?.pernyataan1 === 'ya',
       });
     }
@@ -187,7 +207,7 @@ export default function StudentDetail() {
             <DetailItem label="Pekerjaan Ayah" value={student.fatherJob} />
             <DetailItem label="Nama Ibu" value={student.motherName} />
             <DetailItem label="Pekerjaan Ibu" value={student.motherJob} />
-            <DetailItem label="Telepon Orang Tua" value={student.phone} />
+            <DetailItem label="Telepon Orang Tua" value={student.phone || student.phone2} />
             <DetailItem label="Alamat Orang Tua" value={student.parentAddress} />
 
             {/* Prestasi */}
@@ -209,76 +229,154 @@ export default function StudentDetail() {
             <DetailItem label="Buta Warna" value={student.butawarna} />
             <DetailItem label="Penyakit Menular" value={student.penyakitMenular} />
             <DetailItem label="Penyakit Tidak Menular" value={student.penyakitNonMenular} />
+            <DetailItem label="Rata rata Nilai Matematika" value={student.mat3 && student.mat4 ? ((Number(student.mat3) + Number(student.mat4)) / 2).toFixed(2) : '-'} />
+            <DetailItem label="Rata rata Nilai Indonesia" value={student.indo3 && student.indo4 ? ((Number(student.indo3) + Number(student.indo4)) / 2).toFixed(2) : '-'} />
+            <DetailItem label="Rata rata nilai English" value={student.eng3 && student.eng4 ? ((Number(student.eng3) + Number(student.eng4)) / 2).toFixed(2) : '-'} />
+            <DetailItem label="Rata rata nilai IPA" value={student.ipa3 && student.ipa4 ? ((Number(student.ipa3) + Number(student.ipa4)) / 2).toFixed(2) : '-'} />
+            <DetailItem label="Rata rata nilai PAI" value={student.pai3 && student.pai4 ? ((Number(student.pai3) + Number(student.pai4)) / 2).toFixed(2) : '-'} />
 
             <DetailItem label="Pernyataan Aturan" value={student.rulesAgreement ? 'Sudah Menyetujui' : 'Belum Menyetujui'} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Foto Siswa</p>
+                {student.foto && student.foto.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.foto) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.foto) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Foto Siswa</p>
-    <img src={img(student.foto) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Foto SKTM</p>
+                {student.sktm && student.sktm.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.sktm) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Foto SKTM</p>
-    <img src={img(student.sktm) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Foto SS IG</p>
+                {student.ss_ig && student.ss_ig.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.ss_ig) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Foto SS IG</p>
-    <img src={img(student.ss_ig) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Kartu Keluarga</p>
+                {student.kk && student.kk.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.kk) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.kk) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Kartu Keluarga</p>
-    <img src={img(student.kk) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">KIP</p>
+                {student.kip && student.kip.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.kip) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.kip) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">KIP</p>
-    <img src={img(student.kip) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">BPJS</p>
+                {student.bpjs && student.bpjs.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.bpjs) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.bpjs) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">BPJS</p>
-    <img src={img(student.bpjs) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Surat Rekomendasi</p>
+               {student.rekomendasi_surat && student.rekomendasi_surat.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.rekomendasi_surat) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.rekomendasi_surat) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Surat Rekomendasi</p>
-    <img src={img(student.rekomendasi_surat) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Tagihan Listrik</p>
+                {student.tagihan_listrik && student.tagihan_listrik.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.tagihan_listrik) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.tagihan_listrik) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Tagihan Listrik</p>
-    <img src={img(student.tagihan_listrik) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Bukti Reels</p>
+                {student.reels && student.reels.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.reels) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.reels) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Bukti Reels</p>
-    <img src={img(student.reels) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Rumah Tampak Depan</p>
+                {student.rumah_depan && student.rumah_depan.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.rumah_depan) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.rumah_depan) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Rumah Tampak Depan</p>
-    <img src={img(student.rumah_depan) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Ruang Tamu</p>
+                {student.ruangTamu && student.ruangTamu.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.ruangTamu) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.ruangTamu) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Ruang Tamu</p>
-    <img src={img(student.ruangTamu) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Kamar Tidur</p>
+                {student.kamar && student.kamar.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.kamar) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.kamar) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
+              </div>
+            </div>
 
-  <div>
-    <p className="text-sm font-semibold text-gray-700 mb-2">Kamar Tidur</p>
-    <img src={img(student.kamar) || ''} className="w-full rounded-xl object-cover border" />
-  </div>
-
-</div>
-
-
-            <a href={img(student.rapor) || ''} target="_blank" className="text-blue-600 underline">
-              Lihat Rapor
-            </a>
+            {student.rapor && student.rapor.toLowerCase().endsWith('.pdf') ? (
+                  <a href={img(student.rapor) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Lihat Rapor (PDF)
+                  </a>
+                ) : (
+                  <img src={img(student.rapor) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
+                )}
           </div>
 
           <div className="mt-10 text-center">
