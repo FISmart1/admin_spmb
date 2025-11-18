@@ -433,9 +433,9 @@ export default function TableDataPage() {
  
 
   const exportAllData = async () => {
-  // Import hanya ketika tombol diklik (client-side)
+  // Dynamic import biar tidak dibaca SSR
   const XLSX = await import("xlsx");
-  const FileSaver = await import("file-saver");
+  const { default: saveAs } = await import("file-saver");
 
   const combined = [
     ...allDiterima.map((s) => ({ ...s, kategori: "Diterima" })),
@@ -464,8 +464,9 @@ export default function TableDataPage() {
     type: "application/octet-stream",
   });
 
-  FileSaver.saveAs(fileData, "data_semua_siswa.xlsx");
+  saveAs(fileData, "data_semua_siswa.xlsx");
 };
+
 
 
   return (
