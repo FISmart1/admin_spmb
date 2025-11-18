@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Check, FileCheck2, FolderX, BadgeCheck, X, Download, AlertCircle, Clock4, Send, Eye, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import jsPDF from 'jspdf';
-import { saveAs } from 'file-saver';
+
 
 type Student = {
   id: number;
@@ -430,49 +430,43 @@ export default function TableDataPage() {
     disetujui: disetujui.length,
   };
 
-  const exportToExcel = () => {
-    const dataToExport = filteredViewList.map((s) => ({
-      NISN: s.nisn,
-      Nama: s.nama,
-      Alamat: s.alamat,
-      NIK: s.nik,
-      Kontak: s.kontak,
-      Status: s.status || '-',
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
-
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-
-    saveAs(data, `data_siswa_${activeFilter}.xlsx`);
-  };
+ 
 
   const exportAllData = async () => {
-    // import XLSX hanya di client
-    const XLSX = await import('xlsx');
-    const { saveAs } = await import('file-saver');
+  // Import hanya ketika tombol diklik (client-side)
+  const XLSX = await import("xlsx");
+  const FileSaver = await import("file-saver");
 
-    const combined = [...allDiterima.map((s) => ({ ...s, kategori: 'Diterima' })), ...tertolak.map((s) => ({ ...s, kategori: 'Tertolak' })), ...disetujui.map((s) => ({ ...s, kategori: 'Disetujui' }))];
+  const combined = [
+    ...allDiterima.map((s) => ({ ...s, kategori: "Diterima" })),
+    ...tertolak.map((s) => ({ ...s, kategori: "Tertolak" })),
+    ...disetujui.map((s) => ({ ...s, kategori: "Disetujui" })),
+  ];
 
-    const dataToExport = combined.map((s) => ({
-      NISN: s.nisn,
-      Nama: s.nama,
-      Alamat: s.alamat,
-      NIK: s.nik,
-      Kontak: s.kontak,
-      Kategori: s.kategori,
-    }));
+  const dataToExport = combined.map((s) => ({
+    NISN: s.nisn,
+    Nama: s.nama,
+    Alamat: s.alamat,
+    NIK: s.nik,
+    Kontak: s.kontak,
+    Kategori: s.kategori,
+  }));
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  const workbook = { Sheets: { data: worksheet }, SheetNames: ["data"] };
 
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const fileData = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
 
-    saveAs(fileData, 'data_semua_siswa.xlsx');
-  };
+  const fileData = new Blob([excelBuffer], {
+    type: "application/octet-stream",
+  });
+
+  FileSaver.saveAs(fileData, "data_semua_siswa.xlsx");
+};
+
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -529,9 +523,7 @@ export default function TableDataPage() {
               </svg>
               <input type="text" placeholder="Cari siswa..." className="bg-transparent outline-none w-full text-[13px] text-gray-700 placeholder:text-gray-500" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             </div>
-            <button onClick={exportToExcel} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm">
-              Export Excel
-            </button>
+
             <button onClick={exportAllData} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
               Export Semua Data
             </button>
