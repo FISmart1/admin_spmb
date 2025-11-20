@@ -5,7 +5,6 @@ import { Check, FileCheck2, FolderX, BadgeCheck, X, Download, AlertCircle, Clock
 import { DashboardLayout } from '@/components/dashboard-layout';
 import jsPDF from 'jspdf';
 
-
 type Student = {
   id: number;
   nisn: string;
@@ -53,6 +52,8 @@ type Student = {
   kk: string;
   kip: string;
   bpjs: string;
+  phone: number;
+  phone2: number;
   rekomendasi_surat: string;
   tagihan_listrik: string;
   reels: string;
@@ -128,6 +129,71 @@ export default function TableDataPage() {
             alamat: bio?.addressDetail || '-',
             nik: bio?.nik || '-',
             kontak: bio?.phone || '-',
+
+            birthPlace: item.bio?.birthPlace,
+            birthDate: item.bio?.birthDate
+              ? new Date(item.bio.birthDate).toLocaleDateString('id-ID', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                })
+              : '-',
+
+            address: item.bio?.addressDetail,
+            schoolOrigin: item.bio?.schoolOrigin,
+
+            fatherName: item.orangtua?.ayah_nama,
+            fatherJob: item.orangtua?.ayah_pekerjaan,
+            motherName: item.orangtua?.ibu_nama,
+            motherJob: item.orangtua?.ibu_pekerjaan,
+            phone: item.orangtua?.ayah_telepon,
+            phone2: item.orangtua?.ibu_telepon,
+            parentAddress: item.orangtua?.ayah_alamat,
+
+            achievementField: item.pres?.achievement,
+            achievementName: item.pres?.hafalan,
+            achievementLevel: item.pres?.organization,
+            majorInterest: item.pres?.hobby,
+
+            houseType: item.rumah?.kualitasRumah,
+            houseStatus: item.rumah?.statusKepemilikanRumah,
+            waterSource: item.rumah?.sumberAir,
+            electricity: item.rumah?.dayaListrik,
+
+            bloodType: item.kesehatan?.golonganDarah,
+            weight: item.kesehatan?.beratBadan,
+            height: item.kesehatan?.tinggiBadan,
+            butawarna: item.kesehatan?.butaWarna,
+            penyakitMenular: item.kesehatan?.penyakitMenular,
+            penyakitNonMenular: item.kesehatan?.penyakitNonMenular,
+
+            foto: item.berkas?.foto,
+            rapor: item.berkas?.rapor,
+            rumah_depan: item.berkas?.rumah_depan,
+            ruangTamu: item.berkas?.rumah_ruangtamu,
+            kamar: item.berkas?.rumah_kamar,
+            sktm: item.berkas?.sktm,
+            ss_ig: item.berkas?.ss_ig,
+            kk: item.berkas?.kk,
+            kip: item.berkas?.kip,
+            bpjs: item.berkas?.bpjs,
+            rekomendasi_surat: item.berkas?.rekomendasi_surat,
+            tagihan_listrik: item.berkas?.tagihan_listrik,
+            reels: item.berkas?.reels,
+
+            mat3: item.pres?.math_s3,
+            mat4: item.pres?.math_s4,
+            indo3: item.pres?.indo_s3,
+            indo4: item.pres?.indo_s4,
+            eng3: item.pres?.english_s3,
+            eng4: item.pres?.english_s4,
+            ipa3: item.pres?.ipa_s3,
+            ipa4: item.pres?.ipa_s4,
+            pai3: item.pres?.pai_s3,
+            pai4: item.pres?.pai_s4,
+
+            rulesAgreement: item.aturan?.pernyataan1 === 'ya',
+
             status: 'diterima',
           };
 
@@ -163,22 +229,76 @@ export default function TableDataPage() {
 
   const handleDownloadPDF = (student: Student | null) => {
     if (!student) return;
+
     const doc = new jsPDF();
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.text('Data Siswa', 20, 20);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-    const data = [`NISN: ${student.nisn}`, `Nama: ${student.nama}`, `Alamat: ${student.alamat}`, `NIK: ${student.nik}`, `Kontak: ${student.kontak}`];
+    doc.setFontSize(11);
+
+    // Ubah key → label rapi
+    const labelMap: Record<string, string> = {
+      nisn: 'NISN',
+      nama: 'Nama Lengkap',
+      alamat: 'Alamat',
+      nik: 'NIK',
+      kontak: 'Kontak',
+      birthPlace: 'Tempat Lahir',
+      birthDate: 'Tanggal Lahir',
+      address: 'Alamat Lengkap',
+      schoolOrigin: 'Asal Sekolah',
+
+      fatherName: 'Nama Ayah',
+      fatherJob: 'Pekerjaan Ayah',
+      motherName: 'Nama Ibu',
+      motherJob: 'Pekerjaan Ibu',
+      phone: 'Telepon Ayah',
+      phone2: 'Telepon Ibu',
+      parentAddress: 'Alamat Orang Tua',
+
+      achievementField: 'Bidang Prestasi',
+      achievementName: 'Nama Prestasi',
+      achievementLevel: 'Level Prestasi',
+      majorInterest: 'Minat Jurusan',
+
+      houseType: 'Jenis Rumah',
+      houseStatus: 'Status Rumah',
+      waterSource: 'Sumber Air',
+      electricity: 'Daya Listrik',
+
+      bloodType: 'Golongan Darah',
+      weight: 'Berat Badan',
+      height: 'Tinggi Badan',
+      butawarna: 'Buta Warna',
+      penyakitMenular: 'Penyakit Menular',
+      penyakitNonMenular: 'Penyakit Tidak Menular',
+
+      status: 'Status Verifikasi',
+    };
 
     let y = 40;
-    data.forEach((line) => {
+
+    Object.entries(student).forEach(([key, value]) => {
+      if (value == null || value === '') return;
+
+      const label = labelMap[key] || key; // fallback
+      const line = `${label}: ${value}`;
+
       doc.text(line, 20, y);
-      y += 10;
+      y += 8;
+
+      // Auto page break
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
     });
 
     doc.save(`data_${student.nama.replace(/\s+/g, '_')}.pdf`);
+
+    // tandai sudah di-download
     setDownloadedIds((prev) => (prev.includes(student.id) ? prev : [...prev, student.id]));
   };
 
@@ -430,44 +550,95 @@ export default function TableDataPage() {
     disetujui: disetujui.length,
   };
 
- 
-
   const exportAllData = async () => {
-  // Dynamic import biar tidak dibaca SSR
-  const XLSX = await import("xlsx");
-  const { default: saveAs } = await import("file-saver");
+    // Dynamic import biar tidak dibaca SSR
+    const XLSX = await import('xlsx');
+    const { default: saveAs } = await import('file-saver');
 
-  const combined = [
-    ...allDiterima.map((s) => ({ ...s, kategori: "Diterima" })),
-    ...tertolak.map((s) => ({ ...s, kategori: "Tertolak" })),
-    ...disetujui.map((s) => ({ ...s, kategori: "Disetujui" })),
-  ];
+    const combined = [...allDiterima.map((s) => ({ ...s, kategori: 'Diterima' })), ...tertolak.map((s) => ({ ...s, kategori: 'Tertolak' })), ...disetujui.map((s) => ({ ...s, kategori: 'Disetujui' }))];
 
-  const dataToExport = combined.map((s) => ({
-    NISN: s.nisn,
-    Nama: s.nama,
-    Alamat: s.alamat,
-    NIK: s.nik,
-    Kontak: s.kontak,
-    Kategori: s.kategori,
-  }));
+    const dataToExport = combined.map((s) => ({
+      NISN: s.nisn,
+      Nama: s.nama,
+      Alamat: s.alamat,
+      NIK: s.nik,
+      Kontak: s.kontak,
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-  const workbook = { Sheets: { data: worksheet }, SheetNames: ["data"] };
+      Tempat_Lahir: s.birthPlace,
+      Tanggal_Lahir: s.birthDate,
+      Asal_Sekolah: s.schoolOrigin,
 
-  const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-  });
+      Ayah_Nama: s.fatherName,
+      Ayah_Pekerjaan: s.fatherJob,
+      Ayah_Telepon: s.phone,
+      Ayah_Alamat: s.parentAddress,
 
-  const fileData = new Blob([excelBuffer], {
-    type: "application/octet-stream",
-  });
+      Ibu_Nama: s.motherName,
+      Ibu_Pekerjaan: s.motherJob,
+      Ibu_Telepon: s.phone2,
 
-  saveAs(fileData, "data_semua_siswa.xlsx");
-};
+      Bidang_Prestasi: s.achievementField,
+      Nama_Prestasi: s.achievementName,
+      Tingkat_Prestasi: s.achievementLevel,
+      Minat_Jurusan: s.majorInterest,
 
+      Rumah_Tipe: s.houseType,
+      Rumah_Status: s.houseStatus,
+      Sumber_Air: s.waterSource,
+      Listrik: s.electricity,
 
+      Gol_Darah: s.bloodType,
+      Berat_Badan: s.weight,
+      Tinggi_Badan: s.height,
+      Buta_Warna: s.butawarna,
+      Penyakit_Menular: s.penyakitMenular,
+      Penyakit_Non_Menular: s.penyakitNonMenular,
+
+      Foto: s.foto,
+      Rapor: s.rapor,
+      Rumah_Depan: s.rumah_depan,
+      Rumah_Ruang_Tamu: s.ruangTamu,
+      Rumah_Kamar: s.kamar,
+      SKTM: s.sktm,
+      SS_IG: s.ss_ig,
+      KK: s.kk,
+      KIP: s.kip,
+      BPJS: s.bpjs,
+      Rekomendasi_Surat: s.rekomendasi_surat,
+      Tagihan_Listrik: s.tagihan_listrik,
+      Reels: s.reels,
+
+      Math_Sem3: s.mat3,
+      Math_Sem4: s.mat4,
+      Indo_Sem3: s.indo3,
+      Indo_Sem4: s.indo4,
+      English_Sem3: s.eng3,
+      English_Sem4: s.eng4,
+      IPA_Sem3: s.ipa3,
+      IPA_Sem4: s.ipa4,
+      PAI_Sem3: s.pai3,
+      PAI_Sem4: s.pai4,
+
+      Setuju_Aturan: s.rulesAgreement ? 'Ya' : 'Tidak',
+
+      Status_Verifikasi: s.status,
+      Kategori: s.kategori,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/octet-stream',
+    });
+
+    saveAs(fileData, 'data_semua_siswa.xlsx');
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
