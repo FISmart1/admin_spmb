@@ -705,15 +705,80 @@ export default function TableDataPage() {
     setShowDecisionConfirm({ decision });
   };
 
-  const confirmDecision = () => {
-    if (!selectedStudent || !showDecisionConfirm) return;
+  const confirmDecision = async () => {
+  if (!selectedStudent || !showDecisionConfirm) return;
 
-    const keputusan = showDecisionConfirm.decision;
+  const keputusan = showDecisionConfirm.decision; // 'lolos' | 'tidak'
 
-    setDisetujui((prev) => prev.filter((s) => s.id !== selectedStudent.id));
+  // Tentukan status backend + pesan notifikasi
+  const newStatus = keputusan === "lolos" ? "sudah" : "tertolak";
+  const notifTitle = keputusan === "lolos" ? "Selamat! Anda Lolos" : "Pemberitahuan Hasil Seleksi";
+  const notifMessage =
+    keputusan === "lolos"
+      ? "Selamat! Anda dinyatakan LOLOS pada tahap seleksi."
+      : "Mohon maaf, Anda dinyatakan TIDAK LOLOS.";
+
+  try {
+    // === 1. UPDATE STATUS DI BACKEND ===
+    const updateRes = await fetch(
+      "https://backend_spmb.smktibazma.sch.id/api/pendaftaran/validasi",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: Number(selectedStudent.id),
+          validasi_pendaftaran: newStatus, // 'sudah' | 'tertolak'
+        }),
+      }
+    );
+
+    const updateJson = await updateRes.json();
+
+    if (!updateRes.ok) {
+      console.error("❌ Gagal update status:", updateJson);
+      alert(updateJson.message || "Gagal memperbarui status!");
+      return;
+    }
+
+    // === 2. KIRIM NOTIFIKASI ===
+    const notifRes = await fetch(
+      "https://backend_spmb.smktibazma.sch.id/notifikasi",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: Number(selectedStudent.id),
+          title: notifTitle,
+          message: notifMessage,
+        }),
+      }
+    );
+
+    if (!notifRes.ok) {
+      const notifErr = await notifRes.json();
+      console.error("❌ Gagal kirim notifikasi:", notifErr);
+    }
+
+    // === 3. UPDATE UI STATE ===
     setAllDiterima((prev) => prev.filter((s) => s.id !== selectedStudent.id));
+    setDisetujui((prev) => prev.filter((s) => s.id !== selectedStudent.id));
     setTertolak((prev) => prev.filter((s) => s.id !== selectedStudent.id));
 
+    if (keputusan === "lolos") {
+      setDisetujui((prev) => [
+        ...prev,
+        { ...selectedStudent, status: "sudah" },
+      ]);
+      setActiveFilter("sudah");
+    } else {
+      setTertolak((prev) => [
+        ...prev,
+        { ...selectedStudent, status: "belum" },
+      ]);
+      setActiveFilter("tertolak");
+    }
+
+    // === 4. SIMPAN KE LOCAL STORAGE (tetap seperti logika lama) ===
     const final: FinalDecision = {
       id: selectedStudent.id,
       nisn: selectedStudent.nisn,
@@ -721,22 +786,27 @@ export default function TableDataPage() {
       keputusan,
     };
 
-    try {
-      const raw = localStorage.getItem('app_dataAkhir_v1');
-      const existing: FinalDecision[] = raw ? JSON.parse(raw) : [];
-      const updated = [...existing.filter((d) => d.id !== final.id), final];
-      localStorage.setItem('app_dataAkhir_v1', JSON.stringify(updated));
-      setDataAkhir(updated);
+    const raw = localStorage.getItem("app_dataAkhir_v1");
+    const existing: FinalDecision[] = raw ? JSON.parse(raw) : [];
+    const updated = [...existing.filter((d) => d.id !== final.id), final];
+    localStorage.setItem("app_dataAkhir_v1", JSON.stringify(updated));
+    setDataAkhir(updated);
 
-      alert(`Siswa ${selectedStudent.nama} berhasil ditetapkan sebagai ${keputusan === 'lolos' ? 'LOLOS' : 'TIDAK LOLOS'}!`);
-    } catch (e) {
-      console.error('Gagal menyimpan keputusan akhir:', e);
-      alert('Gagal menyimpan keputusan akhir!');
-    }
+    alert(
+      `Siswa ${selectedStudent.nama} berhasil ditetapkan sebagai ${
+        keputusan === "lolos" ? "LOLOS" : "TIDAK LOLOS"
+      }!`
+    );
 
-    setShowDecisionConfirm(null);
-    setSelectedStudent(null);
-  };
+  } catch (error) {
+    console.error("🔥 ERROR confirmDecision:", error);
+    alert("Terjadi kesalahan server.");
+  }
+
+  setShowDecisionConfirm(null);
+  setSelectedStudent(null);
+};
+
 
   // ... (getCardStyle, CircleDecoration, counts, dan render UI tetap sama)
   const getCardStyle = (type: 'diterima' | 'tertolak' | 'disetujui') => {
