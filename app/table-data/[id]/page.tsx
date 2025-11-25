@@ -9,30 +9,69 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 
 interface StudentFull {
   fullName: string;
+  email: string;
   nisn: string;
   nik: string;
   birthPlace: string;
   birthDate: string;
+  parentStatus: string;
+  familyStatus: string;
+  socialAid: string;
+  livingWith: string;
+  livingWithCustom: string;
+  phoneNumber: string;
+  socialMedia: string;
   address: string;
   schoolOrigin: string;
+  graduationYear: string;
+  npsn: string;
+  province: string;
+  city: string;
+  district: string;
+  sub_district: string;
+  rt: string;
+  rw: string;
+  postalCode: string;
+  childOrder: string;
 
   fatherName: string;
   fatherJob: string;
+  ayah_alamat: string;
+  ayah_tanggungan: string;
+  ayah_penghasilan: string;
   motherName: string;
   motherJob: string;
+  ibu_tanggungan: string;
+  ibu_penghasilan: string;
   phone: string;
   phone2: string;
-  parentAddress: string;
+  ibu_alamat: string;
+  waliNama: string;
+  wali_alamat: string;
+  wali_pekerjaan: string;
+  wali_tanggungan: string;
+  wali_penghasilan: string;
+  wali_hubungan: string;
+  wali_sumber: string;
+  info_ppdb: string;
+  saudara_beasiswa: string;
 
   achievementField: string;
   achievementName: string;
   achievementLevel: string;
   majorInterest: string;
+  foreignLanguage: string;
+  specialNeeds: string;
 
   houseType: string;
+  luasTanah: string;
   houseStatus: string;
   waterSource: string;
   electricity: string;
+  kendaraanDimiliki: string;
+  statusKendaraan: string;
+  hartaTidakBergerak: string;
+  statusHarta: string;
 
   bloodType: string;
   weight: string;
@@ -40,6 +79,8 @@ interface StudentFull {
   butawarna: string;
   penyakitMenular: string;
   penyakitNonMenular: string;
+  kesehatanMental: string;
+  perokok: string;
   foto: string;
   rapor: string;
   rumah_depan: string;
@@ -83,6 +124,7 @@ export default function StudentDetail() {
 
       setStudent({
         fullName: data.bio?.fullName,
+        email: data.user?.email,
         nisn: data.bio?.nisn,
         nik: data.bio?.nik,
         birthPlace: data.bio?.birthPlace,
@@ -93,27 +135,64 @@ export default function StudentDetail() {
               year: 'numeric',
             })
           : '-',
-
+        parentStatus: data.bio?.parentStatus,
+        familyStatus: data.bio?.familyStatus,
+        socialAid: data.bio?.socialAid,
+        livingWith: data.bio?.livingWith,
+        livingWithCustom: data.bio?.livingWithCustom,
+        phoneNumber: data.bio?.phone,
+        socialMedia: data.bio?.socialMedia,
         address: data.bio?.addressDetail,
         schoolOrigin: data.bio?.schoolOrigin,
+        graduationYear: data.bio?.graduationYear,
+        npsn: data.bio?.npsn,
+        province: data.bio?.province,
+        city: data.bio?.city,
+        district: data.bio?.district,
+        sub_district: data.bio?.village,
+        rt: data.bio?.rt,
+        rw: data.bio?.rw,
+        postalCode: data.bio?.postalCode,
+        childOrder: data.bio?.childOrder,
 
         fatherName: data.orangtua?.ayah_nama,
+        ayah_alamat: data.orangtua?.ayah_alamat,
         fatherJob: data.orangtua?.ayah_pekerjaan,
+        ayah_tanggungan: data.orangtua?.ayah_tanggungan,
+        ayah_penghasilan: data.orangtua?.ayah_penghasilan,
         motherName: data.orangtua?.ibu_nama,
         motherJob: data.orangtua?.ibu_pekerjaan,
+        ibu_tanggungan: data.orangtua?.ibu_tanggungan,
+        ibu_penghasilan: data.orangtua?.ibu_penghasilan,
         phone: data.orangtua?.ayah_telepon,
         phone2: data.orangtua?.ibu_telepon,
-        parentAddress: data.orangtua?.ayah_alamat,
+        waliNama: data.orangtua?.wali_nama,
+        wali_alamat: data.orangtua?.wali_alamat,
+        wali_pekerjaan: data.orangtua?.wali_pekerjaan,
+        wali_tanggungan: data.orangtua?.wali_tanggungan,
+        wali_penghasilan: data.orangtua?.wali_penghasilan,
+        ibu_alamat: data.orangtua?.ibu_alamat,
+        wali_hubungan: data.orangtua?.wali_hubungan,
+        wali_sumber: data.orangtua?.wali_sumber,
+        info_ppdb: data.orangtua?.info_ppdb,
+        saudara_beasiswa: data.orangtua?.saudara_beasiswa,
 
         achievementField: data.pres?.achievement,
         achievementName: data.pres?.hafalan,
         achievementLevel: data.pres?.organization,
         majorInterest: data.pres?.hobby,
+        foreignLanguage: data.pres?.foreign_language,
+        specialNeeds: data.pres?.special,
 
         houseType: data.rumah?.kualitasRumah,
+        luasTanah: data.rumah?.luasTanah,
         houseStatus: data.rumah?.statusKepemilikanRumah,
         waterSource: data.rumah?.sumberAir,
         electricity: data.rumah?.dayaListrik,
+        kendaraanDimiliki: data.rumah?.kendaraanDimiliki,
+        statusKendaraan: data.rumah?.statusKendaraan,
+        hartaTidakBergerak: data.rumah?.hartaTidakBergerak,
+        statusHarta: data.rumah?.statusHarta,
 
         bloodType: data.kesehatan?.golonganDarah,
         weight: data.kesehatan?.beratBadan,
@@ -121,6 +200,8 @@ export default function StudentDetail() {
         butawarna: data.kesehatan?.butaWarna,
         penyakitMenular: data.kesehatan?.penyakitMenular,
         penyakitNonMenular: data.kesehatan?.penyakitNonMenular,
+        kesehatanMental: data.kesehatan?.kesehatanMental,
+        perokok: data.kesehatan?.perokok,
         foto: data.berkas?.foto,
         rapor: data.berkas?.rapor,
         rumah_depan: data.berkas?.rumah_depan,
@@ -144,6 +225,7 @@ export default function StudentDetail() {
         ipa4: data.pres?.ipa_s4,
         pai3: data.pres?.pai_s3,
         pai4: data.pres?.pai_s4,
+
         rulesAgreement: data.aturan?.pernyataan1 === 'ya',
       });
     }
@@ -195,33 +277,71 @@ export default function StudentDetail() {
           {/* GRID DATA */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-700">
             <DetailItem label="Nama Lengkap" value={student.fullName} />
+            <DetailItem label="Email" value={student.email} />
             <DetailItem label="NISN" value={student.nisn} />
             <DetailItem label="NIK" value={student.nik} />
             <DetailItem label="Tempat Lahir" value={student.birthPlace} />
             <DetailItem label="Tanggal Lahir" value={student.birthDate} />
+            <DetailItem label="Anak Ke-" value={student.childOrder} />
+            <DetailItem label="Status Orang Tua" value={student.parentStatus} />
+            <DetailItem label="Status Keluarga" value={student.familyStatus} />
+            <DetailItem label="Bantuan Sosial" value={student.socialAid} />
+            <DetailItem label="Tinggal Dengan" value={student.livingWith === 'Lainnya' ? student.livingWithCustom : student.livingWith} />
+            <DetailItem label="No. Telepon" value={student.phoneNumber} />
+            <DetailItem label="Media Sosial" value={student.socialMedia} />
+            <DetailItem label="Provinsi" value={student.province} />
+            <DetailItem label="Kota/Kabupaten" value={student.city} />
+            <DetailItem label="Kecamatan" value={student.district} />
+            <DetailItem label="Kelurahan/Desa" value={student.sub_district} />
+            <DetailItem label="RT" value={student.rt} />
+            <DetailItem label="RW" value={student.rw} />
+            <DetailItem label="Kode Pos" value={student.postalCode} />
             <DetailItem label="Alamat" value={student.address} />
             <DetailItem label="Asal Sekolah" value={student.schoolOrigin} />
+            <DetailItem label="NPSN" value={student.npsn} />
+            <DetailItem label="Tahun Lulus" value={student.graduationYear} />
 
+            <DetailItem label="Pernyataan Aturan" value={student.rulesAgreement ? 'Sudah Menyetujui' : 'Belum Menyetujui'} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mt-10 mb-6">Detail Orang Tua & Keluarga</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-700">
             {/* Orang tua */}
             <DetailItem label="Nama Ayah" value={student.fatherName} />
+            <DetailItem label="Alamat Ayah" value={student.ayah_alamat} />
             <DetailItem label="Pekerjaan Ayah" value={student.fatherJob} />
+            <DetailItem label="Tanggungan Ayah" value={student.ayah_tanggungan} />
+            <DetailItem label="Penghasilan Ayah" value={student.ayah_penghasilan} />
             <DetailItem label="Nama Ibu" value={student.motherName} />
             <DetailItem label="Pekerjaan Ibu" value={student.motherJob} />
+            <DetailItem label="Tanggungan Ibu" value={student.ibu_tanggungan} />
+            <DetailItem label="Penghasilan Ibu" value={student.ibu_penghasilan} />
             <DetailItem label="Telepon Orang Tua" value={student.phone || student.phone2} />
-            <DetailItem label="Alamat Orang Tua" value={student.parentAddress} />
-
-            {/* Prestasi */}
-            <DetailItem label="Prestasi" value={student.achievementField} />
-            <DetailItem label="Jumlah Hafalan" value={student.achievementName} />
-            <DetailItem label="Organisasi" value={student.achievementLevel} />
-            <DetailItem label="Hobi" value={student.majorInterest} />
-
+            <DetailItem label="Alamat Ibu" value={student.ibu_alamat} />
+            <DetailItem label="Nama Wali" value={student.waliNama} />
+            <DetailItem label="Alamat Wali" value={student.wali_alamat} />
+            <DetailItem label="Pekerjaan Wali" value={student.wali_pekerjaan} />
+            <DetailItem label="Tanggungan Wali" value={student.wali_tanggungan} />
+            <DetailItem label="Penghasilan Wali" value={student.wali_penghasilan} />
+            <DetailItem label="Hubungan Wali" value={student.wali_hubungan} />
+            <DetailItem label="Sumber Wali" value={student.wali_sumber} />
+            <DetailItem label="Info PPDB" value={student.info_ppdb} />
+            <DetailItem label="Saudara Penerima Beasiswa" value={student.saudara_beasiswa} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mt-10 mb-6">Detail Kondisi Rumah & Harta</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-700">
             {/* Rumah */}
             <DetailItem label="Jenis Rumah" value={student.houseType} />
             <DetailItem label="Status Kepemilikan Rumah" value={student.houseStatus} />
+            <DetailItem label="Luas Tanah" value={student.luasTanah} />
             <DetailItem label="Sumber Air" value={student.waterSource} />
             <DetailItem label="Daya Listrik" value={student.electricity} />
-
+            <DetailItem label="Kendaraan Dimiliki" value={student.kendaraanDimiliki} />
+            <DetailItem label="Status Kendaraan" value={student.statusKendaraan} />
+            <DetailItem label="Harta Tidak Bergerak" value={student.hartaTidakBergerak} />
+            <DetailItem label="Status Harta" value={student.statusHarta} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mt-10 mb-6">Detail Kesehatan</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-700">
             {/* Kesehatan */}
             <DetailItem label="Golongan Darah" value={student.bloodType} />
             <DetailItem label="Berat Badan" value={student.weight} />
@@ -229,6 +349,18 @@ export default function StudentDetail() {
             <DetailItem label="Buta Warna" value={student.butawarna} />
             <DetailItem label="Penyakit Menular" value={student.penyakitMenular} />
             <DetailItem label="Penyakit Tidak Menular" value={student.penyakitNonMenular} />
+            <DetailItem label="Kesehatan Mental" value={student.kesehatanMental} />
+            <DetailItem label="Perokok" value={student.perokok} />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mt-10 mb-6">Detail Prestasi & Nilai Rata-rata</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-700">
+            {/* Prestasi */}
+            <DetailItem label="Prestasi" value={student.achievementField} />
+            <DetailItem label="Jumlah Hafalan" value={student.achievementName} />
+            <DetailItem label="Organisasi" value={student.achievementLevel} />
+            <DetailItem label="Hobi" value={student.majorInterest} />
+            <DetailItem label="Bahasa Asing" value={student.foreignLanguage} />
+            <DetailItem label="Kekuatan" value={student.specialNeeds} />
             <DetailItem label="Rata rata Nilai Matematika" value={student.mat3 && student.mat4 ? ((Number(student.mat3) + Number(student.mat4)) / 2).toFixed(2) : '-'} />
             <DetailItem label="Rata rata Nilai Indonesia" value={student.indo3 && student.indo4 ? ((Number(student.indo3) + Number(student.indo4)) / 2).toFixed(2) : '-'} />
             <DetailItem label="Rata rata nilai English" value={student.eng3 && student.eng4 ? ((Number(student.eng3) + Number(student.eng4)) / 2).toFixed(2) : '-'} />
@@ -241,8 +373,8 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto Siswa</p>
               {student.foto && student.foto.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.foto) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                  Foto Siswa (PDF)
+                <a href={img(student.foto) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                  Foto SIswa (PDF)
                 </a>
               ) : (
                 <img src={img(student.foto) || ' '} className="w-full rounded-xl object-cover border" alt="Rapor" />
@@ -252,7 +384,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto SKTM</p>
               {student.sktm && student.sktm.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Foto SKTM (PDF)
                 </a>
               ) : (
@@ -263,7 +395,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto SS IG</p>
               {student.ss_ig && student.ss_ig.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Foto ss ig (PDF)
                 </a>
               ) : (
@@ -274,7 +406,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Kartu Keluarga</p>
               {student.kk && student.kk.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.kk) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.kk) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Kartu Keluarga (PDF)
                 </a>
               ) : (
@@ -285,7 +417,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">KIP</p>
               {student.kip && student.kip.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.kip) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.kip) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   KIP Jika memiliki (PDF)
                 </a>
               ) : (
@@ -296,7 +428,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">BPJS</p>
               {student.bpjs && student.bpjs.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.bpjs) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.bpjs) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   BPJS (PDF)
                 </a>
               ) : (
@@ -307,7 +439,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Surat Rekomendasi</p>
               {student.rekomendasi_surat && student.rekomendasi_surat.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.rekomendasi_surat) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.rekomendasi_surat) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   SUrat Rekomendasi (PDF)
                 </a>
               ) : (
@@ -318,7 +450,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Tagihan Listrik</p>
               {student.tagihan_listrik && student.tagihan_listrik.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.tagihan_listrik) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.tagihan_listrik) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Tagihan Listrik (PDF)
                 </a>
               ) : (
@@ -329,7 +461,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Bukti Reels</p>
               {student.reels && student.reels.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.reels) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.reels) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Bukti Reels (PDF)
                 </a>
               ) : (
@@ -340,7 +472,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Rumah Tampak Depan</p>
               {student.rumah_depan && student.rumah_depan.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.rumah_depan) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.rumah_depan) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Rumah Tampak Depan (PDF)
                 </a>
               ) : (
@@ -351,7 +483,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Ruang Tamu</p>
               {student.ruangTamu && student.ruangTamu.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.ruangTamu) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.ruangTamu) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Ruang Tamu (PDF)
                 </a>
               ) : (
@@ -362,7 +494,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Kamar Tidur</p>
               {student.kamar && student.kamar.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.kamar) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.kamar) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Kamar Tidur (PDF)
                 </a>
               ) : (
@@ -372,7 +504,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto Rapor</p>
               {student.rapor && student.rapor.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.rapor) || ''} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                <a href={img(student.rapor) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
                   Lihat Rapor (PDF)
                 </a>
               ) : (

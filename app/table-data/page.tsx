@@ -7,34 +7,76 @@ import jsPDF from 'jspdf';
 
 type Student = {
   id: number;
-  nisn: string;
-  nama: string;
-  alamat: string;
-  nik: string;
-  kontak: string;
   verified?: boolean;
   status?: 'diterima' | 'tertolak' | 'disetujui';
   note?: string;
+
+  // --- DATA DASAR / IDENTITAS ---
+  fullName: string;
+  nama: string; // tetap dipertahankan
+  email: string;
+  nisn: string;
+  nik: string;
   birthPlace: string;
   birthDate: string;
-  address: string;
+  parentStatus: string;
+  familyStatus: string;
+  socialAid: string;
+  livingWith: string;
+  livingWithCustom: string;
+  kontak: string;
+  socialMedia: string;
+  alamat: string;
   schoolOrigin: string;
+  graduationYear: string;
+  npsn: string;
+  province: string;
+  city: string;
+  district: string;
+  sub_district: string;
+  rt: string;
+  rw: string;
+  postalCode: string;
+  childOrder: string;
 
   fatherName: string;
   fatherJob: string;
+  ayah_alamat: string;
+  ayah_tanggungan: string;
+  ayah_penghasilan: string;
   motherName: string;
   motherJob: string;
-  parentAddress: string;
+  ibu_tanggungan: string;
+  ibu_penghasilan: string;
+  phone: string;
+  phone2: string;
+  ibu_alamat: string;
+  waliNama: string;
+  wali_alamat: string;
+  wali_pekerjaan: string;
+  wali_tanggungan: string;
+  wali_penghasilan: string;
+  wali_hubungan: string;
+  wali_sumber: string;
+  info_ppdb: string;
+  saudara_beasiswa: string;
 
   achievementField: string;
   achievementName: string;
   achievementLevel: string;
   majorInterest: string;
+  foreignLanguage: string;
+  specialNeeds: string;
 
   houseType: string;
+  luasTanah: string;
   houseStatus: string;
   waterSource: string;
   electricity: string;
+  kendaraanDimiliki: string;
+  statusKendaraan: string;
+  hartaTidakBergerak: string;
+  statusHarta: string;
 
   bloodType: string;
   weight: string;
@@ -42,6 +84,8 @@ type Student = {
   butawarna: string;
   penyakitMenular: string;
   penyakitNonMenular: string;
+  kesehatanMental: string;
+  perokok: string;
   foto: string;
   rapor: string;
   rumah_depan: string;
@@ -52,8 +96,6 @@ type Student = {
   kk: string;
   kip: string;
   bpjs: string;
-  phone: number;
-  phone2: number;
   rekomendasi_surat: string;
   tagihan_listrik: string;
   reels: string;
@@ -121,6 +163,12 @@ export default function TableDataPage() {
         data.data.forEach((item: any) => {
           const status = item.user.validasi_pendaftaran;
           const bio = item.bio;
+          const orangtua = item.orangtua;
+          const pres = item.pres;
+          const rumah = item.rumah;
+          const berkas = item.berkas;
+          const kesehatan = item.kesehatan;
+          const aturan = item.aturan;
 
           const row: Student = {
             id: item.user.id,
@@ -130,70 +178,104 @@ export default function TableDataPage() {
             nik: bio?.nik || '-',
             kontak: bio?.phone || '-',
 
-            birthPlace: item.bio?.birthPlace,
-            birthDate: item.bio?.birthDate
-              ? new Date(item.bio.birthDate).toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })
+            birthPlace: bio?.birthPlace,
+            birthDate: bio?.birthDate
+              ? new Date(bio.birthDate).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+              })
               : '-',
+            parentStatus: bio?.parentStatus,
+            familyStatus: bio?.familyStatus,
+            socialAid: bio?.socialAid,
+            livingWith: bio?.livingWith,
+            livingWithCustom: bio?.livingWithCustom,
+            socialMedia: bio?.socialMedia,
+            schoolOrigin: bio?.schoolOrigin,
+            graduationYear: bio?.graduationYear,
+            npsn: bio?.npsn,
+            province: bio?.province,
+            city: bio?.city,
+            district: bio?.district,
+            sub_district: bio?.village,
+            rt: bio?.rt,
+            rw: bio?.rw,
+            postalCode: bio?.postalCode,
+            childOrder: bio?.childOrder,
 
-            address: item.bio?.addressDetail,
-            schoolOrigin: item.bio?.schoolOrigin,
+            fatherName: orangtua?.ayah_nama,
+            ayah_alamat: orangtua?.ayah_alamat,
+            fatherJob: orangtua?.ayah_pekerjaan,
+            ayah_tanggungan: orangtua?.ayah_tanggungan,
+            ayah_penghasilan: orangtua?.ayah_penghasilan,
+            motherName: orangtua?.ibu_nama,
+            motherJob: orangtua?.ibu_pekerjaan,
+            ibu_tanggungan: orangtua?.ibu_tanggungan,
+            ibu_penghasilan: orangtua?.ibu_penghasilan,
+            phone: orangtua?.ayah_telepon,
+            phone2: orangtua?.ibu_telepon,
+            waliNama: orangtua?.wali_nama,
+            wali_alamat: orangtua?.wali_alamat,
+            wali_pekerjaan: orangtua?.wali_pekerjaan,
+            wali_tanggungan: orangtua?.wali_tanggungan,
+            wali_penghasilan: orangtua?.wali_penghasilan,
+            ibu_alamat: orangtua?.ibu_alamat,
+            wali_hubungan: orangtua?.wali_hubungan,
+            wali_sumber: orangtua?.wali_sumber,
+            info_ppdb: orangtua?.info_ppdb,
+            saudara_beasiswa: orangtua?.saudara_beasiswa,
 
-            fatherName: item.orangtua?.ayah_nama,
-            fatherJob: item.orangtua?.ayah_pekerjaan,
-            motherName: item.orangtua?.ibu_nama,
-            motherJob: item.orangtua?.ibu_pekerjaan,
-            phone: item.orangtua?.ayah_telepon,
-            phone2: item.orangtua?.ibu_telepon,
-            parentAddress: item.orangtua?.ayah_alamat,
+            achievementField: pres?.achievement,
+            achievementName: pres?.hafalan,
+            achievementLevel: pres?.organization,
+            majorInterest: pres?.hobby,
+            foreignLanguage: pres?.foreign_language,
+            specialNeeds: pres?.special,
 
-            achievementField: item.pres?.achievement,
-            achievementName: item.pres?.hafalan,
-            achievementLevel: item.pres?.organization,
-            majorInterest: item.pres?.hobby,
+            houseType: rumah?.kualitasRumah,
+            luasTanah: rumah?.luasTanah,
+            houseStatus: rumah?.statusKepemilikanRumah,
+            waterSource: rumah?.sumberAir,
+            electricity: rumah?.dayaListrik,
+            kendaraanDimiliki: rumah?.kendaraanDimiliki,
+            statusKendaraan: rumah?.statusKendaraan,
+            hartaTidakBergerak: rumah?.hartaTidakBergerak,
+            statusHarta: rumah?.statusHarta,
 
-            houseType: item.rumah?.kualitasRumah,
-            houseStatus: item.rumah?.statusKepemilikanRumah,
-            waterSource: item.rumah?.sumberAir,
-            electricity: item.rumah?.dayaListrik,
+            bloodType: kesehatan?.golonganDarah,
+            weight: kesehatan?.beratBadan,
+            height: kesehatan?.tinggiBadan,
+            butawarna: kesehatan?.butaWarna,
+            penyakitMenular: kesehatan?.penyakitMenular,
+            penyakitNonMenular: kesehatan?.penyakitNonMenular,
+            kesehatanMental: kesehatan?.kesehatanMental,
+            perokok: kesehatan?.perokok,
+            foto: berkas?.foto,
+            rapor: berkas?.rapor,
+            rumah_depan: berkas?.rumah_depan,
+            ruangTamu: berkas?.rumah_ruangtamu,
+            kamar: berkas?.rumah_kamar,
+            sktm: berkas?.sktm,
+            ss_ig: berkas?.ss_ig,
+            kk: berkas?.kk,
+            kip: berkas?.kip,
+            bpjs: berkas?.bpjs,
+            rekomendasi_surat: berkas?.rekomendasi_surat,
+            tagihan_listrik: berkas?.tagihan_listrik,
+            reels: berkas?.reels,
+            mat3: pres?.math_s3,
+            mat4: pres?.math_s4,
+            indo3: pres?.indo_s3,
+            indo4: pres?.indo_s4,
+            eng3: pres?.english_s3,
+            eng4: pres?.english_s4,
+            ipa3: pres?.ipa_s3,
+            ipa4: pres?.ipa_s4,
+            pai3: pres?.pai_s3,
+            pai4: pres?.pai_s4,
 
-            bloodType: item.kesehatan?.golonganDarah,
-            weight: item.kesehatan?.beratBadan,
-            height: item.kesehatan?.tinggiBadan,
-            butawarna: item.kesehatan?.butaWarna,
-            penyakitMenular: item.kesehatan?.penyakitMenular,
-            penyakitNonMenular: item.kesehatan?.penyakitNonMenular,
-
-            foto: item.berkas?.foto,
-            rapor: item.berkas?.rapor,
-            rumah_depan: item.berkas?.rumah_depan,
-            ruangTamu: item.berkas?.rumah_ruangtamu,
-            kamar: item.berkas?.rumah_kamar,
-            sktm: item.berkas?.sktm,
-            ss_ig: item.berkas?.ss_ig,
-            kk: item.berkas?.kk,
-            kip: item.berkas?.kip,
-            bpjs: item.berkas?.bpjs,
-            rekomendasi_surat: item.berkas?.rekomendasi_surat,
-            tagihan_listrik: item.berkas?.tagihan_listrik,
-            reels: item.berkas?.reels,
-
-            mat3: item.pres?.math_s3,
-            mat4: item.pres?.math_s4,
-            indo3: item.pres?.indo_s3,
-            indo4: item.pres?.indo_s4,
-            eng3: item.pres?.english_s3,
-            eng4: item.pres?.english_s4,
-            ipa3: item.pres?.ipa_s3,
-            ipa4: item.pres?.ipa_s4,
-            pai3: item.pres?.pai_s3,
-            pai4: item.pres?.pai_s4,
-
-            rulesAgreement: item.aturan?.pernyataan1 === 'ya',
-
+            rulesAgreement: aturan?.pernyataan1 === 'ya',
             status: 'diterima',
           };
 
@@ -232,41 +314,126 @@ export default function TableDataPage() {
 
     const doc = new jsPDF();
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.text('Data Siswa', 20, 20);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
 
-    // Ubah key → label rapi
+    let y = 35;
+    const lineHeight = 7;
+    const maxWidth = 170;
+
+    // Fungsi untuk menambah teks dengan auto wrap + page break
+    const addWrappedText = (label: string, value: any) => {
+      if (value == null || value === "") return;
+
+      const fullText = `${label}: ${value}`;
+
+      const lines = doc.splitTextToSize(fullText, maxWidth);
+
+      lines.forEach((line: string) => {
+        if (y > 275) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(line, 20, y);
+        y += lineHeight;
+      });
+
+      y += 2; // spacing antar item
+    };
+
+    // ====== SECTION HELPER ======
+    const addSection = (title: string) => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.text(title, 20, y);
+      y += 10;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+    };
+
+
+    // ====== LABEL MAP (sudah lengkap) ======
     const labelMap: Record<string, string> = {
+      id: 'ID',
       nisn: 'NISN',
       nama: 'Nama Lengkap',
       alamat: 'Alamat',
       nik: 'NIK',
       kontak: 'Kontak',
+
       birthPlace: 'Tempat Lahir',
       birthDate: 'Tanggal Lahir',
+      parentStatus: 'Status Orang Tua',
+      familyStatus: 'Status Keluarga',
+      socialAid: 'Bantuan Sosial',
+      livingWith: 'Tinggal Dengan',
+      livingWithCustom: 'Tinggal Dengan (Lainnya)',
+      socialMedia: 'Media Sosial',
       address: 'Alamat Lengkap',
       schoolOrigin: 'Asal Sekolah',
+      graduationYear: 'Tahun Kelulusan',
+      npsn: 'NPSN Sekolah',
+      province: 'Provinsi',
+      city: 'Kota/Kabupaten',
+      district: 'Kecamatan',
+      sub_district: 'Kelurahan/Desa',
+      rt: 'RT',
+      rw: 'RW',
+      postalCode: 'Kode Pos',
+      childOrder: 'Anak Ke',
 
       fatherName: 'Nama Ayah',
+      ayah_alamat: 'Alamat Ayah',
       fatherJob: 'Pekerjaan Ayah',
+      ayah_tanggungan: 'Tanggungan Ayah',
+      ayah_penghasilan: 'Penghasilan Ayah',
+
       motherName: 'Nama Ibu',
       motherJob: 'Pekerjaan Ibu',
-      phone: 'Telepon Ayah',
-      phone2: 'Telepon Ibu',
-      parentAddress: 'Alamat Orang Tua',
+      ibu_tanggungan: 'Tanggungan Ibu',
+      ibu_penghasilan: 'Penghasilan Ibu',
+      ibu_alamat: 'Alamat Ibu',
+
+      phone: 'Nomor Telepon Ayah',
+      phone2: 'Nomor Telepon Ibu',
+
+      waliNama: 'Nama Wali',
+      wali_alamat: 'Alamat Wali',
+      wali_pekerjaan: 'Pekerjaan Wali',
+      wali_tanggungan: 'Tanggungan Wali',
+      wali_penghasilan: 'Penghasilan Wali',
+      wali_hubungan: 'Hubungan Dengan Wali',
+      wali_sumber: 'Sumber Nafkah Wali',
+
+      info_ppdb: 'Info PPDB',
+      saudara_beasiswa: 'Saudara Penerima Beasiswa',
 
       achievementField: 'Bidang Prestasi',
       achievementName: 'Nama Prestasi',
       achievementLevel: 'Level Prestasi',
       majorInterest: 'Minat Jurusan',
+      foreignLanguage: 'Bahasa Asing',
+      specialNeeds: 'Kebutuhan Khusus',
 
       houseType: 'Jenis Rumah',
-      houseStatus: 'Status Rumah',
+      luasTanah: 'Luas Tanah',
+      houseStatus: 'Status Kepemilikan Rumah',
       waterSource: 'Sumber Air',
       electricity: 'Daya Listrik',
+      kendaraanDimiliki: 'Kendaraan Dimiliki',
+      statusKendaraan: 'Status Kendaraan',
+      hartaTidakBergerak: 'Harta Tidak Bergerak',
+      statusHarta: 'Status Harta',
 
       bloodType: 'Golongan Darah',
       weight: 'Berat Badan',
@@ -274,33 +441,84 @@ export default function TableDataPage() {
       butawarna: 'Buta Warna',
       penyakitMenular: 'Penyakit Menular',
       penyakitNonMenular: 'Penyakit Tidak Menular',
+      kesehatanMental: 'Kesehatan Mental',
+      perokok: 'Perokok',
 
+      foto: 'Foto Siswa',
+      rapor: 'Rapor',
+      rumah_depan: 'Foto Rumah (Depan)',
+      ruangTamu: 'Foto Ruang Tamu',
+      kamar: 'Foto Kamar',
+      sktm: 'Surat SKTM',
+      ss_ig: 'Screenshot Instagram',
+      kk: 'Kartu Keluarga',
+      kip: 'KIP',
+      bpjs: 'BPJS',
+      rekomendasi_surat: 'Surat Rekomendasi',
+      tagihan_listrik: 'Tagihan Listrik',
+      reels: 'Video Reels',
+
+      mat3: 'Matematika Semester 3',
+      mat4: 'Matematika Semester 4',
+      indo3: 'Bahasa Indonesia Semester 3',
+      indo4: 'Bahasa Indonesia Semester 4',
+      eng3: 'Bahasa Inggris Semester 3',
+      eng4: 'Bahasa Inggris Semester 4',
+      ipa3: 'IPA Semester 3',
+      ipa4: 'IPA Semester 4',
+      pai3: 'PAI Semester 3',
+      pai4: 'PAI Semester 4',
+
+      rulesAgreement: 'Setuju Dengan Aturan',
       status: 'Status Verifikasi',
     };
 
-    let y = 40;
 
-    Object.entries(student).forEach(([key, value]) => {
-      if (value == null || value === '') return;
+    // ============================
+    // CETAK DATA PER SECTION
+    // ============================
 
-      const label = labelMap[key] || key; // fallback
-      const line = `${label}: ${value}`;
+    // ---- Identitas ----
+    addSection("IDENTITAS SISWA");
+    [
+      'nisn', 'nama', 'nik', 'kontak', 'alamat'
+    ].forEach(k => addWrappedText(labelMap[k], student[k]));
 
-      doc.text(line, 20, y);
-      y += 8;
+    // ---- Biodata ----
+    addSection("BIODATA & KELUARGA");
+    [
+      'birthPlace', 'birthDate', 'schoolOrigin', 'graduationYear', 'province',
+      'city', 'district', 'sub_district', 'rt', 'rw', 'postalCode', 'childOrder'
+    ].forEach(k => addWrappedText(labelMap[k], student[k]));
 
-      // Auto page break
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
-    });
+    // ---- Orang Tua ----
+    addSection("DATA ORANG TUA");
+    [
+      'fatherName', 'fatherJob', 'motherName', 'motherJob', 'phone', 'phone2'
+    ].forEach(k => addWrappedText(labelMap[k], student[k]));
+
+    // ---- Prestasi ----
+    addSection("DATA PRESTASI");
+    [
+      'achievementField', 'achievementName', 'achievementLevel', 'majorInterest'
+    ].forEach(k => addWrappedText(labelMap[k], student[k]));
+
+    // ---- Rumah ----
+    addSection("DATA RUMAH & EKONOMI");
+    [
+      'houseType', 'houseStatus', 'waterSource', 'electricity'
+    ].forEach(k => addWrappedText(labelMap[k], student[k]));
+
+    // ---- Kesehatan ----
+    addSection("DATA KESEHATAN");
+    [
+      'bloodType', 'weight', 'height', 'butawarna', 'penyakitMenular', 'penyakitNonMenular'
+    ].forEach(k => addWrappedText(labelMap[k], student[k]));
+
 
     doc.save(`data_${student.nama.replace(/\s+/g, '_')}.pdf`);
-
-    // tandai sudah di-download
-    setDownloadedIds((prev) => (prev.includes(student.id) ? prev : [...prev, student.id]));
   };
+
 
   const diterimaList = allDiterima.filter((s) => [undefined, 'diterima'].includes(s.status));
 
@@ -308,8 +526,8 @@ export default function TableDataPage() {
     activeFilter === 'diterima'
       ? diterimaList.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()))
       : activeFilter === 'tertolak'
-      ? tertolak.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()))
-      : disetujui.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()));
+        ? tertolak.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()))
+        : disetujui.filter((s) => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // ---------------- Setujui flow ----------------
   const handleSetujuiClicked = (student: Student) => {
@@ -558,42 +776,94 @@ export default function TableDataPage() {
     const combined = [...allDiterima.map((s) => ({ ...s, kategori: 'Diterima' })), ...tertolak.map((s) => ({ ...s, kategori: 'Tertolak' })), ...disetujui.map((s) => ({ ...s, kategori: 'Disetujui' }))];
 
     const dataToExport = combined.map((s) => ({
+      // --- Identitas ---
+      ID: s.id,
       NISN: s.nisn,
       Nama: s.nama,
       Alamat: s.alamat,
       NIK: s.nik,
       Kontak: s.kontak,
 
+      // --- Biodata ---
       Tempat_Lahir: s.birthPlace,
       Tanggal_Lahir: s.birthDate,
+      Status_Orang_Tua: s.parentStatus,
+      Status_Keluarga: s.familyStatus,
+      Bantuan_Sosial: s.socialAid,
+      Tinggal_Dengan: s.livingWith,
+      Tinggal_Dengan_Lainnya: s.livingWithCustom,
+      Media_Sosial: s.socialMedia,
+      Alamat_Lengkap: s.alamat,
       Asal_Sekolah: s.schoolOrigin,
+      Tahun_Lulus: s.graduationYear,
+      NPSN: s.npsn,
+      Provinsi: s.province,
+      Kota: s.city,
+      Kecamatan: s.district,
+      Kelurahan_Desa: s.sub_district,
+      RT: s.rt,
+      RW: s.rw,
+      Kode_Pos: s.postalCode,
+      Anak_Ke: s.childOrder,
 
+      // --- Ayah ---
       Ayah_Nama: s.fatherName,
+      Ayah_Alamat: s.ayah_alamat,
       Ayah_Pekerjaan: s.fatherJob,
+      Ayah_Tanggungan: s.ayah_tanggungan,
+      Ayah_Penghasilan: s.ayah_penghasilan,
       Ayah_Telepon: s.phone,
-      Ayah_Alamat: s.parentAddress,
 
+      // --- Ibu ---
       Ibu_Nama: s.motherName,
+      Ibu_Alamat: s.ibu_alamat,
       Ibu_Pekerjaan: s.motherJob,
+      Ibu_Tanggungan: s.ibu_tanggungan,
+      Ibu_Penghasilan: s.ibu_penghasilan,
       Ibu_Telepon: s.phone2,
 
+      // --- Wali ---
+      Wali_Nama: s.waliNama,
+      Wali_Alamat: s.wali_alamat,
+      Wali_Pekerjaan: s.wali_pekerjaan,
+      Wali_Tanggungan: s.wali_tanggungan,
+      Wali_Penghasilan: s.wali_penghasilan,
+      Wali_Hubungan: s.wali_hubungan,
+      Wali_Sumber_Nafkah: s.wali_sumber,
+
+      Informasi_PPDB: s.info_ppdb,
+      Saudara_Penerima_Beasiswa: s.saudara_beasiswa,
+
+      // --- Prestasi & Minat ---
       Bidang_Prestasi: s.achievementField,
       Nama_Prestasi: s.achievementName,
       Tingkat_Prestasi: s.achievementLevel,
       Minat_Jurusan: s.majorInterest,
+      Bahasa_Asing: s.foreignLanguage,
+      Kebutuhan_Khusus: s.specialNeeds,
 
+      // --- Ekonomi & Rumah ---
       Rumah_Tipe: s.houseType,
+      Luas_Tanah: s.luasTanah,
       Rumah_Status: s.houseStatus,
       Sumber_Air: s.waterSource,
       Listrik: s.electricity,
+      Kendaraan_Dimiliki: s.kendaraanDimiliki,
+      Status_Kendaraan: s.statusKendaraan,
+      Harta_Tidak_Bergerak: s.hartaTidakBergerak,
+      Status_Harta: s.statusHarta,
 
+      // --- Kesehatan ---
       Gol_Darah: s.bloodType,
       Berat_Badan: s.weight,
       Tinggi_Badan: s.height,
       Buta_Warna: s.butawarna,
       Penyakit_Menular: s.penyakitMenular,
       Penyakit_Non_Menular: s.penyakitNonMenular,
+      Kesehatan_Mental: s.kesehatanMental,
+      Perokok: s.perokok,
 
+      // --- Berkas ---
       Foto: s.foto,
       Rapor: s.rapor,
       Rumah_Depan: s.rumah_depan,
@@ -608,8 +878,9 @@ export default function TableDataPage() {
       Tagihan_Listrik: s.tagihan_listrik,
       Reels: s.reels,
 
-      Math_Sem3: s.mat3,
-      Math_Sem4: s.mat4,
+      // --- Nilai Semester ---
+      Matematika_Sem3: s.mat3,
+      Matematika_Sem4: s.mat4,
       Indo_Sem3: s.indo3,
       Indo_Sem4: s.indo4,
       English_Sem3: s.eng3,
@@ -619,11 +890,14 @@ export default function TableDataPage() {
       PAI_Sem3: s.pai3,
       PAI_Sem4: s.pai4,
 
+      // --- Aturan ---
       Setuju_Aturan: s.rulesAgreement ? 'Ya' : 'Tidak',
 
+      // --- Status ---
       Status_Verifikasi: s.status,
       Kategori: s.kategori,
     }));
+
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
