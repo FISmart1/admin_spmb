@@ -373,7 +373,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto Siswa</p>
               {student.foto && student.foto.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.foto) || ''} target="_blank" className="text-white bg-blue-500 p-4">
+                <a href={img(student.foto) || ''} target="_blank" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Foto SIswa (PDF)
                 </a>
               ) : (
@@ -384,7 +384,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto SKTM</p>
               {student.sktm && student.sktm.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4">
+                <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Foto SKTM (PDF)
                 </a>
               ) : (
@@ -395,7 +395,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto SS IG</p>
               {student.ss_ig && student.ss_ig.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4">
+                <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Foto ss ig (PDF)
                 </a>
               ) : (
@@ -406,7 +406,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Kartu Keluarga</p>
               {student.kk && student.kk.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.kk) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.kk) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Kartu Keluarga (PDF)
                 </a>
               ) : (
@@ -417,7 +417,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">KIP</p>
               {student.kip && student.kip.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.kip) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.kip) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   KIP Jika memiliki (PDF)
                 </a>
               ) : (
@@ -428,7 +428,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">BPJS</p>
               {student.bpjs && student.bpjs.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.bpjs) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.bpjs) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   BPJS (PDF)
                 </a>
               ) : (
@@ -439,7 +439,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Surat Rekomendasi</p>
               {student.rekomendasi_surat && student.rekomendasi_surat.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.rekomendasi_surat) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.rekomendasi_surat) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   SUrat Rekomendasi (PDF)
                 </a>
               ) : (
@@ -450,7 +450,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Tagihan Listrik</p>
               {student.tagihan_listrik && student.tagihan_listrik.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.tagihan_listrik) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.tagihan_listrik) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Tagihan Listrik (PDF)
                 </a>
               ) : (
@@ -461,7 +461,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Bukti Reels</p>
               {student.reels && student.reels.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.reels) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.reels) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Bukti Reels (PDF)
                 </a>
               ) : (
@@ -472,7 +472,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Rumah Tampak Depan</p>
               {student.rumah_depan && student.rumah_depan.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.rumah_depan) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.rumah_depan) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Rumah Tampak Depan (PDF)
                 </a>
               ) : (
@@ -483,7 +483,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Ruang Tamu</p>
               {student.ruangTamu && student.ruangTamu.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.ruangTamu) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.ruangTamu) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Ruang Tamu (PDF)
                 </a>
               ) : (
@@ -494,7 +494,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Kamar Tidur</p>
               {student.kamar && student.kamar.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.kamar) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.kamar) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Kamar Tidur (PDF)
                 </a>
               ) : (
@@ -504,7 +504,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto Rapor</p>
               {student.rapor && student.rapor.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.rapor) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.rapor) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4 mt-2 rounded-lg">
                   Lihat Rapor (PDF)
                 </a>
               ) : (
