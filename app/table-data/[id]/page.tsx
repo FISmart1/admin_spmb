@@ -373,7 +373,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto Siswa</p>
               {student.foto && student.foto.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.foto) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.foto) || ''} target="_blank" className="text-white bg-blue-500 p-4">
                   Foto SIswa (PDF)
                 </a>
               ) : (
@@ -384,7 +384,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto SKTM</p>
               {student.sktm && student.sktm.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.sktm) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4">
                   Foto SKTM (PDF)
                 </a>
               ) : (
@@ -395,7 +395,7 @@ export default function StudentDetail() {
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-2">Foto SS IG</p>
               {student.ss_ig && student.ss_ig.toLowerCase().endsWith('.pdf') ? (
-                <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue p-4">
+                <a href={img(student.ss_ig) || ''} target="_blank" rel="noopener noreferrer" className="text-white bg-blue-500 p-4">
                   Foto ss ig (PDF)
                 </a>
               ) : (
