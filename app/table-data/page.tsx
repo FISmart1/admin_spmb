@@ -1070,10 +1070,20 @@ export default function TableDataPage() {
 
                     // Kondisi warna hijau
                     const isGreen = avg > 90 && s.rulesAgreement === true;
+                    const isYellow = avg < 90 && s.rulesAgreement === true;
+                    const isRed = s.rulesAgreement === false;
+
                     console.log(s.nama, avg, s.rulesAgreement);
 
                     return (
-                      <tr key={s.id} className={`hover:bg-gray-50 transition text-xs sm:text-sm ${isGreen ? 'bg-green-100' : ''}`}>
+                      <tr
+                        key={s.id}
+                        className={`hover:bg-gray-50 transition text-xs sm:text-sm
+    ${isGreen ? 'bg-green-100' : ''}
+    ${isYellow ? 'bg-yellow-100' : ''}
+    ${isRed ? 'bg-red-100' : ''}
+  `}
+                      >
                         <td className="px-4 py-3 font-mono text-green-600 break-all">{s.waktu_daftar}</td>
                         <td className="px-4 py-3 whitespace-nowrap">{s.nama}</td>
 
@@ -1157,6 +1167,15 @@ export default function TableDataPage() {
 
                                 <button onClick={() => handleDecisionOnDisetujui(s, 'tidak')} className="btn-action bg-red-500 hover:bg-red-600 text-white">
                                   Tidak
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
+                                    window.location.href = `/table-data/${s.id}`;
+                                  }}
+                                  className="btn-action bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  <Eye className="icon" />
                                 </button>
                               </>
                             )}
