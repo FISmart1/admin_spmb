@@ -274,16 +274,16 @@ export default function TableDataPage() {
             rekomendasi_surat: berkas?.rekomendasi_surat,
             tagihan_listrik: berkas?.tagihan_listrik,
             reels: berkas?.reels,
-            mat3: pres?.math_s3,
-            mat4: pres?.math_s4,
-            indo3: pres?.indo_s3,
-            indo4: pres?.indo_s4,
-            eng3: pres?.english_s3,
-            eng4: pres?.english_s4,
-            ipa3: pres?.ipa_s3,
-            ipa4: pres?.ipa_s4,
-            pai3: pres?.pai_s3,
-            pai4: pres?.pai_s4,
+            mat3: Number(pres?.math_s3),
+            mat4: Number(pres?.math_s4),
+            indo3: Number(pres?.indo_s3),
+            indo4: Number(pres?.indo_s4),
+            eng3: Number(pres?.english_s3),
+            eng4: Number(pres?.english_s4),
+            ipa3: Number(pres?.ipa_s3),
+            ipa4: Number(pres?.ipa_s4),
+            pai3: Number(pres?.pai_s3),
+            pai4: Number(pres?.pai_s4),
 
             rulesAgreement: aturan?.pernyataan1 === 'ya',
             status: 'diterima',
@@ -699,105 +699,95 @@ export default function TableDataPage() {
   };
 
   const confirmDecision = async () => {
-  if (!selectedStudent || !showDecisionConfirm) return;
+    if (!selectedStudent || !showDecisionConfirm) return;
 
-  const keputusan = showDecisionConfirm.decision;
-  const isLolos = keputusan === "lolos";
+    const keputusan = showDecisionConfirm.decision;
+    const isLolos = keputusan === 'lolos';
 
-  console.log("🟡 Mulai proses keputusan seleksi...", { siswa: selectedStudent, keputusan, isLolos });
+    console.log('🟡 Mulai proses keputusan seleksi...', { siswa: selectedStudent, keputusan, isLolos });
 
-  const newStatus = isLolos ? "sudah" : "tertolak";
-  const notifTitle = isLolos ? "Selamat! Anda Lolos" : "Pemberitahuan Hasil Seleksi";
-  const notifMessage = isLolos
-    ? "Selamat! Anda dinyatakan LOLOS pada tahap seleksi."
-    : "Mohon maaf, Anda dinyatakan TIDAK LOLOS.";
+    const newStatus = isLolos ? 'sudah' : 'tertolak';
+    const notifTitle = isLolos ? 'Selamat! Anda Lolos' : 'Pemberitahuan Hasil Seleksi';
+    const notifMessage = isLolos ? 'Selamat! Anda dinyatakan LOLOS pada tahap seleksi.' : 'Mohon maaf, Anda dinyatakan TIDAK LOLOS.';
 
-  try {
-    // === 1️⃣ UPDATE VALIDASI (tetap pakai PATCH) ===
-    console.log("📡 Request PATCH /validasi:", {
-      user_id: selectedStudent.id,
-      validasi_pendaftaran: newStatus,
-    });
+    try {
+      // === 1️⃣ UPDATE VALIDASI (tetap pakai PATCH) ===
+      console.log('📡 Request PATCH /validasi:', {
+        user_id: selectedStudent.id,
+        validasi_pendaftaran: newStatus,
+      });
 
-    const updateRes = await fetch(
-      "https://backend_spmb.smktibazma.sch.id/api/pendaftaran/validasi",
-      {
-        method: "PATCH", // 🔙 kembali ke PATCH
-        headers: { "Content-Type": "application/json" },
+      const updateRes = await fetch('https://backend_spmb.smktibazma.sch.id/api/pendaftaran/validasi', {
+        method: 'PATCH', // 🔙 kembali ke PATCH
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: Number(selectedStudent.id),
           validasi_pendaftaran: newStatus,
         }),
+      });
+
+      // 🔐 Cek dulu apakah response berupa JSON
+      const updateText = await updateRes.text();
+      let updateJson;
+      try {
+        updateJson = JSON.parse(updateText);
+      } catch (e) {
+        console.error('❌ Backend tidak mengembalikan JSON:', updateText);
+        alert('Server error pada validasi: kemungkinan endpoint salah atau method tidak sesuai.');
+        return;
       }
-    );
 
-    // 🔐 Cek dulu apakah response berupa JSON
-    const updateText = await updateRes.text();
-    let updateJson;
-    try {
-      updateJson = JSON.parse(updateText);
-    } catch (e) {
-      console.error("❌ Backend tidak mengembalikan JSON:", updateText);
-      alert("Server error pada validasi: kemungkinan endpoint salah atau method tidak sesuai.");
-      return;
-    }
+      console.log('📥 Response validasi:', updateJson);
 
-    console.log("📥 Response validasi:", updateJson);
+      if (!updateRes.ok) {
+        alert(updateJson.message || 'Gagal memperbarui status!');
+        return;
+      }
 
-    if (!updateRes.ok) {
-      alert(updateJson.message || "Gagal memperbarui status!");
-      return;
-    }
+      // === 2️⃣ KIRIM NOTIFIKASI (POST) ===
+      console.log('📡 Kirim notifikasi:', { user_id: selectedStudent.id, notifTitle, notifMessage });
 
-    // === 2️⃣ KIRIM NOTIFIKASI (POST) ===
-    console.log("📡 Kirim notifikasi:", { user_id: selectedStudent.id, notifTitle, notifMessage });
-
-    const notifRes = await fetch("https://backend_spmb.smktibazma.sch.id/notifikasi", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: Number(selectedStudent.id),
-        title: notifTitle,
-        message: notifMessage,
-      }),
-    });
-
-    const notifJson = await notifRes.json();
-    console.log("📥 Response notifikasi:", notifJson);
-
-    // === 3️⃣ UPDATE PENGUMUMAN (INI SAJA YANG PUT) ===
-    console.log("📡 PUT /pengumuman:", {
-      seleksi_berkas: isLolos ? "ya" : "tidak",
-    });
-
-    const pengumumanRes = await fetch(
-      `https://backend_spmb.smktibazma.sch.id/api/pengumuman/${selectedStudent.id}`,
-      {
-        method: "PUT", // 🔥 hanya di sini pakai PUT
-        headers: { "Content-Type": "application/json" },
+      const notifRes = await fetch('https://backend_spmb.smktibazma.sch.id/notifikasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          seleksi_berkas: isLolos ? "ya" : "tidak",
+          user_id: Number(selectedStudent.id),
+          title: notifTitle,
+          message: notifMessage,
         }),
-      }
-    );
+      });
 
-    if (!pengumumanRes.ok) {
-      console.warn("⚠️ Gagal update pengumuman seleksi");
+      const notifJson = await notifRes.json();
+      console.log('📥 Response notifikasi:', notifJson);
+
+      // === 3️⃣ UPDATE PENGUMUMAN (INI SAJA YANG PUT) ===
+      console.log('📡 PUT /pengumuman:', {
+        seleksi_berkas: isLolos ? 'ya' : 'tidak',
+      });
+
+      const pengumumanRes = await fetch(`https://backend_spmb.smktibazma.sch.id/api/pengumuman/${selectedStudent.id}`, {
+        method: 'PUT', // 🔥 hanya di sini pakai PUT
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seleksi_berkas: isLolos ? 'ya' : 'tidak',
+        }),
+      });
+
+      if (!pengumumanRes.ok) {
+        console.warn('⚠️ Gagal update pengumuman seleksi');
+      }
+
+      // 💾 Update UI dan localStorage tetap sama...
+      // (tidak disalin biar ringkas)
+    } catch (error) {
+      console.error('🔥 ERROR confirmDecision:', error);
+      alert('Terjadi kesalahan server.');
     }
 
-    // 💾 Update UI dan localStorage tetap sama...
-    // (tidak disalin biar ringkas)
-  } catch (error) {
-    console.error("🔥 ERROR confirmDecision:", error);
-    alert("Terjadi kesalahan server.");
-  }
-
-  setShowDecisionConfirm(null);
-  setSelectedStudent(null);
-  console.log("🏁 Proses selesai.\n");
-};
-
-
+    setShowDecisionConfirm(null);
+    setSelectedStudent(null);
+    console.log('🏁 Proses selesai.\n');
+  };
 
   // ... (getCardStyle, CircleDecoration, counts, dan render UI tetap sama)
   const getCardStyle = (type: 'diterima' | 'tertolak' | 'disetujui') => {
@@ -1072,102 +1062,109 @@ export default function TableDataPage() {
                 </thead>
 
                 <tbody className="divide-y">
-                  {currentItems.map((s) => (
-                    <tr key={s.id} className="hover:bg-gray-50 transition text-xs sm:text-sm">
-                      <td className="px-4 py-3 font-mono text-green-600 break-all">{s.waktu_daftar}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{s.nama}</td>
+                  {currentItems.map((s) => {
+                    // Hitung rata-rata nilai
+                    const nilaiList = [Number(s.mat3), Number(s.mat4), Number(s.indo3), Number(s.indo4), Number(s.eng3), Number(s.eng4), Number(s.ipa3), Number(s.ipa4), Number(s.pai3), Number(s.pai4)].filter((n) => !isNaN(n));
 
-                      {/* WRAP + TRUNCATE RESPONSIF */}
-                      <td className="px-4 py-3 max-w-[140px] md:max-w-[260px] truncate">{s.nisn}</td>
+                    const avg = nilaiList.length > 0 ? nilaiList.reduce((a, b) => a + b, 0) / nilaiList.length : 0;
 
-                      <td className="px-4 py-3 break-all">{s.nik}</td>
-                      <td className="px-4 py-3 break-all">{s.kontak}</td>
+                    // Kondisi warna hijau
+                    const isGreen = avg > 90 && s.rulesAgreement === true;
+                    console.log(s.nama, avg, s.rulesAgreement);
 
-                      <td className="px-4 py-3">
-                        {/* WRAP ACTION */
-                        /* HP = scroll horizontal supaya tidak numpuk */
-                        /* Desktop = wrap */}
-                        <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible gap-2 justify-start md:justify-center pb-1">
-                          {activeFilter === 'diterima' && (
-                            <>
-                              <button onClick={() => handleSetujuiClicked(s)} className="btn-action bg-green-500 hover:bg-green-600 text-white">
-                                <Check className="icon" /> Setujui
-                              </button>
+                    return (
+                      <tr key={s.id} className={`hover:bg-gray-50 transition text-xs sm:text-sm ${isGreen ? 'bg-green-100' : ''}`}>
+                        <td className="px-4 py-3 font-mono text-green-600 break-all">{s.waktu_daftar}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">{s.nama}</td>
 
-                              <button onClick={() => handleTolakClicked(s)} className="btn-action bg-yellow-500 hover:bg-yellow-600 text-white">
-                                <Clock4 className="icon" /> Tolak
-                              </button>
+                        <td className="px-4 py-3 max-w-[140px] md:max-w-[260px] truncate">{s.nisn}</td>
 
-                              <button
-                                onClick={() => {
-                                  setSelectedStudent(s);
-                                  handleDownloadPDF(s);
-                                }}
-                                className="btn-action bg-yellow-100 hover:bg-yellow-200 text-yellow-700"
-                              >
-                                <Download className="icon" />
-                              </button>
+                        <td className="px-4 py-3 break-all">{s.nik}</td>
+                        <td className="px-4 py-3 break-all">{s.kontak}</td>
 
-                              <button
-                                onClick={() => {
-                                  sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
-                                  window.location.href = `/table-data/${s.id}`;
-                                }}
-                                className="btn-action bg-blue-600 hover:bg-blue-700 text-white"
-                              >
-                                <Eye className="icon" />
-                              </button>
-                            </>
-                          )}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible gap-2 justify-start md:justify-center pb-1">
+                            {activeFilter === 'diterima' && (
+                              <>
+                                <button onClick={() => handleSetujuiClicked(s)} className="btn-action bg-green-500 hover:bg-green-600 text-white">
+                                  <Check className="icon" /> Setujui
+                                </button>
 
-                          {activeFilter === 'tertolak' && (
-                            <>
-                              <button onClick={() => handleEditNoteTertolak(s)} className="btn-action bg-gray-100 hover:bg-gray-200 text-gray-700">
-                                Edit Note
-                              </button>
+                                <button onClick={() => handleTolakClicked(s)} className="btn-action bg-yellow-500 hover:bg-yellow-600 text-white">
+                                  <Clock4 className="icon" /> Tolak
+                                </button>
 
-                              <button
-                                onClick={() => {
-                                  setSelectedStudent(s);
-                                  setShowTertolakConfirm(true);
-                                }}
-                                disabled={!s.note}
-                                className={`btn-action bg-blue-500 hover:bg-blue-600 text-white ${!s.note ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              >
-                                <Send className="icon" /> Kirim
-                              </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedStudent(s);
+                                    handleDownloadPDF(s);
+                                  }}
+                                  className="btn-action bg-yellow-100 hover:bg-yellow-200 text-yellow-700"
+                                >
+                                  <Download className="icon" />
+                                </button>
 
-                              <button onClick={() => handleSetujuiClicked(s)} className="btn-action bg-green-500 hover:bg-green-600 text-white">
-                                <Check className="icon" /> Setujui
-                              </button>
+                                <button
+                                  onClick={() => {
+                                    sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
+                                    window.location.href = `/table-data/${s.id}`;
+                                  }}
+                                  className="btn-action bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  <Eye className="icon" />
+                                </button>
+                              </>
+                            )}
 
-                              <button
-                                onClick={() => {
-                                  sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
-                                  window.location.href = `/table-data/${s.id}`;
-                                }}
-                                className="btn-action bg-blue-600 hover:bg-blue-700 text-white"
-                              >
-                                <Eye className="icon" />
-                              </button>
-                            </>
-                          )}
+                            {activeFilter === 'tertolak' && (
+                              <>
+                                <button onClick={() => handleEditNoteTertolak(s)} className="btn-action bg-gray-100 hover:bg-gray-200 text-gray-700">
+                                  Edit Note
+                                </button>
 
-                          {activeFilter === 'disetujui' && (
-                            <>
-                              <button onClick={() => handleDecisionOnDisetujui(s, 'lolos')} className="btn-action bg-green-500 hover:bg-green-600 text-white">
-                                Loloskan
-                              </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedStudent(s);
+                                    setShowTertolakConfirm(true);
+                                  }}
+                                  disabled={!s.note}
+                                  className={`btn-action bg-blue-500 hover:bg-blue-600 text-white ${!s.note ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                  <Send className="icon" /> Kirim
+                                </button>
 
-                              <button onClick={() => handleDecisionOnDisetujui(s, 'tidak')} className="btn-action bg-red-500 hover:bg-red-600 text-white">
-                                Tidak
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                                <button onClick={() => handleSetujuiClicked(s)} className="btn-action bg-green-500 hover:bg-green-600 text-white">
+                                  <Check className="icon" /> Setujui
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    sessionStorage.setItem('ppdb_diterima', JSON.stringify(filteredViewList));
+                                    window.location.href = `/table-data/${s.id}`;
+                                  }}
+                                  className="btn-action bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  <Eye className="icon" />
+                                </button>
+                              </>
+                            )}
+
+                            {activeFilter === 'disetujui' && (
+                              <>
+                                <button onClick={() => handleDecisionOnDisetujui(s, 'lolos')} className="btn-action bg-green-500 hover:bg-green-600 text-white">
+                                  Loloskan
+                                </button>
+
+                                <button onClick={() => handleDecisionOnDisetujui(s, 'tidak')} className="btn-action bg-red-500 hover:bg-red-600 text-white">
+                                  Tidak
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
 
                   {filteredViewList.length === 0 && (
                     <tr>
