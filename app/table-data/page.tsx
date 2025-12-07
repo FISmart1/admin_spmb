@@ -1216,6 +1216,20 @@ export default function TableDataPage() {
             </div>
           </div>
         )}
+        <div className='flex flex-col gap-4 mt-5'>
+          <div className='flex items-center gap-2'>
+            <div className='w-10 h-10 bg-green-100 rounded-full'></div>
+            <p className='text-center'>{'nilai > 90 dan setuju atas aturan yang berlaku'}</p>
+          </div>
+          <div className='flex items-center gap-2'>
+            <div className='w-10 h-10 bg-yellow-100 rounded-full'></div>
+            <p className='text-center'>{'nilai < 90 dan setuju atas aturan yang berlaku'}</p>
+          </div>
+          <div className='flex items-center gap-2'>
+            <div className='w-10 h-10 bg-red-100 rounded-full'></div>
+            <p className='text-center'>{'nilai < 90 dan belum setuju atas aturan yang berlaku'}</p>
+          </div>
+        </div>
 
         {/* Modal components tetap sama seperti sebelumnya */}
         {showWarningDownload && selectedStudent && (
