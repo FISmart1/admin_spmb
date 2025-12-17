@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BadgeCheck, XCircle, MoreVertical, Send, X, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
+import { useRouter } from "next/navigation";
 
 type PengumumanSeleksi = {
   user_id: number;
@@ -33,7 +34,19 @@ const [tesData, setTesData] = useState({
   home_visit: "pending",
   pengumuman_akhir: "pending",
 });
+const router = useRouter();
 
+useEffect(() => {
+      setTimeout(() => {
+        const token = localStorage.getItem("admin_token");
+  
+        if (!token) {
+          router.replace("/"); 
+          return;
+        }
+  
+      }, 30);
+    }, []); // ← FIX
 
   // === FETCH DATA DARI BACKEND ===
   useEffect(() => {
