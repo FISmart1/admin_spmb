@@ -12,6 +12,7 @@ type Student = {
   status?: 'diterima' | 'tertolak' | 'disetujui';
   note?: string;
   waktu_daftar: string;
+  wa: string;
 
   // --- DATA DASAR / IDENTITAS ---
   fullName: string;
@@ -190,6 +191,7 @@ export default function TableDataPage() {
 
           const row: Student = {
             id: item.user.id,
+            wa: item.user.wa,
             waktu_daftar: item.user.created_at
               ? new Date(item.user.created_at).toLocaleDateString('id-ID', {
                   day: '2-digit',
@@ -1105,7 +1107,7 @@ export default function TableDataPage() {
                         <td className="px-4 py-3 max-w-[140px] md:max-w-[260px] truncate">{s.nisn}</td>
 
                         <td className="px-4 py-3 break-all">{s.nik}</td>
-                        <td className="px-4 py-3 break-all">{s.kontak}</td>
+                        <td className="px-4 py-3 break-all">{s.wa}</td>
 
                         <td className="px-4 py-3">
                           <div className="flex flex-nowrap md:flex-wrap overflow-x-auto md:overflow-visible gap-2 justify-start md:justify-center pb-1">

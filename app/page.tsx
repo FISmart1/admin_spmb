@@ -11,12 +11,16 @@ export default function LoginPage() {
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
-    // ✅ Cek apakah user sudah login
-    const isLoggedIn = localStorage.getItem("admin_logged_in");
-    if (isLoggedIn === "true") {
-      router.push("/dashboard");
-    }
-  }, [router]);
+      setTimeout(() => {
+        const token = localStorage.getItem("admin_token");
+  
+        if (token) {
+          router.replace("/dashboard"); 
+          return;
+        }
+  
+      }, 30);
+    }, []); // ← FIX
 
   return (
     <>

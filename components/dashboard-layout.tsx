@@ -31,6 +31,17 @@ export function DashboardLayout() {
   const [showConfirm, setShowConfirm] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
+   useEffect(() => {
+      setTimeout(() => {
+        const token = localStorage.getItem("admin_token");
+  
+        if (!token) {
+          router.replace("/"); 
+          return;
+        }
+  
+      }, 30);
+    }, []); // ← FIX
 
   useEffect(() => {
     const listener = () => setSidebarOpen((prev) => !prev);
