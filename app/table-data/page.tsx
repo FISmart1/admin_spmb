@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Check, FileCheck2, FolderX, BadgeCheck, X, Download, AlertCircle, Clock4, Send, Eye, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
+import { useRouter } from "next/navigation";
 import jsPDF from 'jspdf';
 
 type Student = {
@@ -146,6 +147,20 @@ export default function TableDataPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const router = useRouter();
+
+   useEffect(() => {
+    setTimeout(() => {
+      const token = localStorage.getItem("admin_token");
+
+      if (!token) {
+        router.replace("/"); 
+        return;
+      }
+
+      setIsLoading(false);
+    }, 30);
+  }, []); // ← FIX
 
   useEffect(() => {
     async function loadData() {

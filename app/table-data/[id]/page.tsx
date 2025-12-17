@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 
+
 interface StudentFull {
   fullName: string;
   email: string;
@@ -112,6 +113,17 @@ export default function StudentDetail() {
   const params = useParams();
 
   const [student, setStudent] = useState<StudentFull | null>(null);
+
+useEffect(() => {
+    setTimeout(() => {
+      const token = localStorage.getItem("admin_token");
+
+      if (!token) {
+        router.replace("/"); 
+        return;
+      }
+    }, 30);
+  }, []); // ← FIX
 
   useEffect(() => {
     async function fetchDetail() {
