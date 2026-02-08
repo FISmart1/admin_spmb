@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 type PengumumanSeleksi = {
   user_id: number;
   nisn?: string;
-  name?: string;
+  fullName?: string;
   seleksi_berkas: 'ya' | 'tidak' | 'pending';
   tes_akademik?: string;
   tes_psikotes?: string;
@@ -238,7 +238,7 @@ const sendNotifications = async (user_id, data) => {
               {filteredStudents.map((s) => (
                 <tr key={s.user_id} className="border-b last:border-0 hover:bg-gray-50 text-xs sm:text-sm">
                   <td className="px-3 sm:px-4 py-2 font-mono text-green-600">{s.nisn || '-'}</td>
-                  <td className="px-3 sm:px-4 py-2">{s.name || '-'}</td>
+                  <td className="px-3 sm:px-4 py-2">{s.fullName || '-'}</td>
                   <td className="px-3 sm:px-4 py-2 text-center font-semibold">{s.seleksi_berkas === 'ya' ? <span className="text-green-600">Lolos</span> : <span className="text-red-600">Tidak Lolos</span>}</td>
                   <td className="px-3 sm:px-4 py-2 flex items-center justify-center gap-2 flex-wrap">
                     <button onClick={() => handleSendNotification(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-500 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-600 transition">
