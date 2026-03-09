@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BadgeCheck, XCircle, MoreVertical, Send, X, Menu } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard-layout';
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
 type PengumumanSeleksi = {
   user_id: number;
@@ -25,37 +25,42 @@ export default function DataAkhirPage() {
   const [showChangeStatus, setShowChangeStatus] = useState(false);
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [showTesModal, setShowTesModal] = useState(false);
-const [tesData, setTesData] = useState({
-  seleksi_berkas: "pending",
-  tes_akademik: "pending",
-  tes_psikotes: "pending",
-  wawancara: "pending",
-  tes_baca_quran: "pending",
-  home_visit: "pending",
-  pengumuman_akhir: "pending",
-});
-const router = useRouter();
+  const [tesData, setTesData] = useState({
+    seleksi_berkas: 'pending',
+    tes_akademik: 'pending',
+    tes_psikotes: 'pending',
+    wawancara: 'pending',
+    tes_baca_quran: 'pending',
+    home_visit: 'pending',
+    pengumuman_akhir: 'pending',
+  });
+  const router = useRouter();
 
-useEffect(() => {
-      setTimeout(() => {
-        const token = localStorage.getItem("admin_token");
-  
-        if (!token) {
-          router.replace("/"); 
-          return;
-        }
-  
-      }, 30);
-    }, []); // ← FIX
+  useEffect(() => {
+    setTimeout(() => {
+      const token = localStorage.getItem('admin_token');
+
+      if (!token) {
+        router.replace('/');
+        return;
+      }
+    }, 30);
+  }, []); // ← FIX
 
   // === FETCH DATA DARI BACKEND ===
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch('https://backend_spmb.smktibazma.sch.id/api/pengumuman');
-        if (!res.ok) throw new Error('Fetch gagal');
         const data = await res.json();
-        setStudents(data);
+
+        const formatted = data.map((item: any) => ({
+          ...item,
+          name: item.fullName || item.user_name || '-',
+          nisn: item.nisn || '-',
+        }));
+
+        setStudents(formatted);
       } catch (err) {
         console.error('❌ Gagal fetch data pengumuman:', err);
       }
@@ -64,7 +69,19 @@ useEffect(() => {
   }, []);
 
   // Filter berdasarkan seleksi_berkas saja (lolos/tidak)
-  const filteredStudents = students.filter((s) => (filter === 'lolos' ? s.seleksi_berkas === 'ya' : s.seleksi_berkas === 'tidak'));
+  const filteredStudents = students.filter((s) => {
+    const tahapTes = [s.seleksi_berkas, s.tes_akademik, s.tes_psikotes, s.wawancara, s.tes_baca_quran, s.home_visit];
+
+    const gagal = tahapTes.includes('tidak');
+
+    if (filter === 'lolos') {
+      return !gagal;
+    }
+
+    if (filter === 'tidak') {
+      return gagal;
+    }
+  });
 
   const handleChangeStatus = (newStatus: 'ya' | 'tidak') => {
     if (!selectedStudent) return;
@@ -111,59 +128,59 @@ useEffect(() => {
     }
   };
 
-const sendNotifications = async (user_id, data) => {
-  const entries = Object.entries(data);
+  const sendNotifications = async (user_id, data) => {
+    const entries = Object.entries(data);
 
-  for (const [field, value] of entries) {
-    const message = `${field.replace(/_/g, " ")} diperbarui menjadi: ${value}`;
+    for (const [field, value] of entries) {
+      const message = `${field.replace(/_/g, ' ')} diperbarui menjadi: ${value}`;
 
-    await fetch("https://backend_spmb.smktibazma.sch.id/api/notifikasi", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id,
-        title: "Perubahan Data Seleksi",
-        message,
-      }),
-    });
-  }
-};
-
+      await fetch('https://backend_spmb.smktibazma.sch.id/api/notifikasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id,
+          title: 'Perubahan Data Seleksi',
+          message,
+        }),
+      });
+    }
+  };
 
   const saveTesUpdate = async () => {
-  if (!selectedStudent) return;
+    if (!selectedStudent) return;
 
-  try {
-    const res = await fetch(
-      `https://backend_spmb.smktibazma.sch.id/api/pengumuman/${selectedStudent.user_id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+    const tahapTes = [tesData.seleksi_berkas, tesData.tes_akademik, tesData.tes_psikotes, tesData.wawancara, tesData.tes_baca_quran, tesData.home_visit];
+
+    // LOGIC PENENTUAN KELULUSAN
+    if (tahapTes.includes('tidak')) {
+      tesData.pengumuman_akhir = 'tidak';
+    } else {
+      tesData.pengumuman_akhir = 'ya';
+    }
+
+    try {
+      const res = await fetch(`https://backend_spmb.smktibazma.sch.id/api/pengumuman/${selectedStudent.user_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(tesData),
-      }
-    );
+      });
 
-    if (!res.ok) throw new Error("Gagal update data tes");
+      if (!res.ok) throw new Error('Gagal update data tes');
 
-    // UPDATE STATE FRONTEND
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.user_id === selectedStudent.user_id ? { ...s, ...tesData } : s
-      )
-    );
+      // UPDATE STATE FRONTEND
+      setStudents((prev) => prev.map((s) => (s.user_id === selectedStudent.user_id ? { ...s, ...tesData } : s)));
 
-    // AUTO KIRIM NOTIF PER FIELD
-    await sendNotifications(selectedStudent.user_id, tesData);
+      // AUTO KIRIM NOTIF PER FIELD
+      await sendNotifications(selectedStudent.user_id, tesData);
 
-    alert("Berhasil diperbarui ✔");
+      alert('Berhasil diperbarui ✔');
 
-    setShowTesModal(false);
-  } catch (err) {
-    console.error("❌ ERROR update:", err);
-    alert("Update gagal");
-  }
-};
-
+      setShowTesModal(false);
+    } catch (err) {
+      console.error('❌ ERROR update:', err);
+      alert('Update gagal');
+    }
+  };
 
   const CircleDecoration = ({ active }: { active: boolean }) => (
     <div className="absolute top-0 right-0 w-[140px] h-[140px] translate-x-1/2 -translate-y-1/3">
@@ -192,13 +209,19 @@ const sendNotifications = async (user_id, data) => {
               type: 'lolos',
               title: 'Data Lolos',
               icon: BadgeCheck,
-              count: students.filter((s) => s.seleksi_berkas === 'ya').length,
+              count: students.filter((s) => {
+                const tahapTes = [s.seleksi_berkas, s.tes_akademik, s.tes_psikotes, s.wawancara, s.tes_baca_quran, s.home_visit];
+                return !tahapTes.includes('tidak');
+              }).length,
             },
             {
               type: 'tidak',
               title: 'Data Tidak Lolos',
               icon: XCircle,
-              count: students.filter((s) => s.seleksi_berkas === 'tidak').length,
+              count: students.filter((s) => {
+                const tahapTes = [s.seleksi_berkas, s.tes_akademik, s.tes_psikotes, s.wawancara, s.tes_baca_quran, s.home_visit];
+                return tahapTes.includes('tidak');
+              }).length,
             },
           ].map(({ type, title, icon: Icon, count }) => (
             <button key={type} onClick={() => setFilter(type as any)} className="relative w-full sm:w-[360px] md:w-[380px] h-[150px] rounded-[10px] text-left transition overflow-hidden" style={getCardStyle(type as any)}>
@@ -239,7 +262,25 @@ const sendNotifications = async (user_id, data) => {
                 <tr key={s.user_id} className="border-b last:border-0 hover:bg-gray-50 text-xs sm:text-sm">
                   <td className="px-3 sm:px-4 py-2 font-mono text-green-600">{s.nisn || '-'}</td>
                   <td className="px-3 sm:px-4 py-2">{s.name || '-'}</td>
-                  <td className="px-3 sm:px-4 py-2 text-center font-semibold">{s.seleksi_berkas === 'ya' ? <span className="text-green-600">Lolos</span> : <span className="text-red-600">Tidak Lolos</span>}</td>
+                  <td className="px-3 sm:px-4 py-2 text-center font-semibold">
+                    {(() => {
+                      const tahap = [s.seleksi_berkas, s.tes_akademik, s.tes_psikotes, s.wawancara, s.tes_baca_quran, s.home_visit];
+
+                      // jika ada yang tidak
+                      if (tahap.includes('tidak')) {
+                        return <span className="text-red-600">Tidak Lolos</span>;
+                      }
+
+                      // cek tahapan terakhir yang sudah diisi
+                      const terakhir = s.home_visit ?? s.tes_baca_quran ?? s.wawancara ?? s.tes_psikotes ?? s.tes_akademik ?? s.seleksi_berkas;
+
+                      if (terakhir === 'ya') {
+                        return <span className="text-green-600">Lolos</span>;
+                      }
+
+                      return <span className="text-gray-500">Masih lanjut</span>;
+                    })()}
+                  </td>
                   <td className="px-3 sm:px-4 py-2 flex items-center justify-center gap-2 flex-wrap">
                     <button onClick={() => handleSendNotification(s)} className="flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-500 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-600 transition">
                       <Send className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -256,26 +297,25 @@ const sendNotifications = async (user_id, data) => {
                     </button>
                   </td>
                   <td className="px-3 py-2 text-center">
-  <button
-    onClick={() => {
-      setSelectedStudent(s);
-      setTesData({
-        seleksi_berkas: s.seleksi_berkas ?? "pending",
-        tes_akademik: s.tes_akademik ?? "pending",
-        tes_psikotes: s.tes_psikotes ?? "pending",
-        wawancara: s.wawancara ?? "pending",
-        tes_baca_quran: s.tes_baca_quran ?? "pending",
-        home_visit: s.home_visit ?? "pending",
-        pengumuman_akhir: s.pengumuman_akhir ?? "pending",
-      });
-      setShowTesModal(true);
-    }}
-    className="px-3 py-1 bg-indigo-500 text-white rounded-lg text-xs hover:bg-indigo-600"
-  >
-    Update Pengumuman
-  </button>
-</td>
-
+                    <button
+                      onClick={() => {
+                        setSelectedStudent(s);
+                        setTesData({
+                          seleksi_berkas: s.seleksi_berkas ?? 'pending',
+                          tes_akademik: s.tes_akademik ?? 'pending',
+                          tes_psikotes: s.tes_psikotes ?? 'pending',
+                          wawancara: s.wawancara ?? 'pending',
+                          tes_baca_quran: s.tes_baca_quran ?? 'pending',
+                          home_visit: s.home_visit ?? 'pending',
+                          pengumuman_akhir: s.pengumuman_akhir ?? 'pending',
+                        });
+                        setShowTesModal(true);
+                      }}
+                      className="px-3 py-1 bg-indigo-500 text-white rounded-lg text-xs hover:bg-indigo-600"
+                    >
+                      Update Pengumuman
+                    </button>
+                  </td>
                 </tr>
               ))}
               {filteredStudents.length === 0 && (
@@ -337,64 +377,47 @@ const sendNotifications = async (user_id, data) => {
         )}
       </div>
       {showTesModal && selectedStudent && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-xl shadow-lg w-[92%] max-w-lg p-6 relative">
-      <button
-        onClick={() => setShowTesModal(false)}
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-      >
-        <X className="w-5 h-5" />
-      </button>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-[92%] max-w-lg p-6 relative">
+            <button onClick={() => setShowTesModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
 
-      <h2 className="text-lg font-semibold text-[#132B6D] mb-4">
-        Update Tes Seleksi — {selectedStudent.nama}
-      </h2>
+            <h2 className="text-lg font-semibold text-[#132B6D] mb-4">Update Tes Seleksi — {selectedStudent.nama}</h2>
 
-      {/* LOOP FIELD TES */}
-      {Object.keys(tesData).map((key) => (
-        <div key={key} className="mb-3">
-          <p className="font-semibold capitalize">{key.replace(/_/g, " ")}</p>
+            {/* LOOP FIELD TES */}
+            {Object.keys(tesData).map((key) => (
+              <div key={key} className="mb-3">
+                <p className="font-semibold capitalize">{key.replace(/_/g, ' ')}</p>
 
-          <div className="flex gap-4 mt-1">
-            {["ya", "tidak", "pending"].map((opt) => (
-              <label key={opt} className="flex items-center gap-1 text-sm">
-                <input
-                  type="radio"
-                  name={key}
-                  value={opt}
-                  checked={tesData[key] === opt}
-                  onChange={(e) =>
-                    setTesData((prev) => ({ ...prev, [key]: e.target.value }))
-                  }
-                />
-                {opt}
-              </label>
+                <div className="flex gap-4 mt-1">
+                  {['ya', 'tidak', 'pending'].map((opt) => (
+                    <label key={opt} className="flex items-center gap-1 text-sm">
+                      <input type="radio" name={key} value={opt} checked={tesData[key] === opt} onChange={(e) => setTesData((prev) => ({ ...prev, [key]: e.target.value }))} />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+              </div>
             ))}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setShowTesModal(false)} className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400">
+                Batal
+              </button>
+
+              <button
+                onClick={async () => {
+                  await saveTesUpdate();
+                }}
+                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+              >
+                Simpan
+              </button>
+            </div>
           </div>
         </div>
-      ))}
-
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          onClick={() => setShowTesModal(false)}
-          className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400"
-        >
-          Batal
-        </button>
-
-        <button
-          onClick={async () => {
-            await saveTesUpdate();
-          }}
-          className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
-        >
-          Simpan
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 }
