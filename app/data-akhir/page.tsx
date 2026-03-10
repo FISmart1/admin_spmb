@@ -34,6 +34,10 @@ export default function DataAkhirPage() {
     home_visit: 'pending',
     pengumuman_akhir: 'pending',
   });
+  const [search, setSearch] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedTest, setSelectedTest] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -69,18 +73,45 @@ export default function DataAkhirPage() {
   }, []);
 
   // Filter berdasarkan seleksi_berkas saja (lolos/tidak)
-  const filteredStudents = students.filter((s) => {
-    const tahapTes = [s.seleksi_berkas, s.tes_akademik, s.tes_psikotes, s.wawancara, s.tes_baca_quran, s.home_visit];
+  const filteredStudents = students
+  .filter((s) => {
+    const tahapTes = [
+      s.seleksi_berkas,
+      s.tes_akademik,
+      s.tes_psikotes,
+      s.wawancara,
+      s.tes_baca_quran,
+      s.home_visit,
+    ];
 
     const gagal = tahapTes.includes('tidak');
 
+    const matchSearch =
+      s.name?.toLowerCase().includes(search.toLowerCase());
+
     if (filter === 'lolos') {
-      return !gagal;
+      return !gagal && matchSearch;
     }
 
     if (filter === 'tidak') {
-      return gagal;
+      return gagal && matchSearch;
     }
+
+    return matchSearch;
+  })
+  .sort((a, b) => {
+    const keyword = search.toLowerCase();
+
+    const nameA = a.name?.toLowerCase() || "";
+    const nameB = b.name?.toLowerCase() || "";
+
+    const aStarts = nameA.startsWith(keyword);
+    const bStarts = nameB.startsWith(keyword);
+
+    if (aStarts && !bStarts) return -1;
+    if (!aStarts && bStarts) return 1;
+
+    return nameA.localeCompare(nameB);
   });
 
   const handleChangeStatus = (newStatus: 'ya' | 'tidak') => {
@@ -247,6 +278,53 @@ export default function DataAkhirPage() {
 
         {/* Table */}
         <div className="overflow-x-auto bg-white rounded-lg shadow">
+          <div className="mb-4">
+            <input type="text" placeholder="Cari nama siswa..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full max-w-sm px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <div className="flex gap-3 mb-4 flex-wrap">
+            <select value={selectedTest} onChange={(e) => setSelectedTest(e.target.value)} className="border px-3 py-2 rounded">
+              <option value="">Pilih Tes</option>
+              <option value="seleksi_berkas">Seleksi Berkas</option>
+              <option value="tes_akademik">Tes Akademik</option>
+              <option value="tes_psikotes">Tes Psikotes</option>
+              <option value="wawancara">Wawancara</option>
+              <option value="tes_baca_quran">Tes Baca Quran</option>
+              <option value="home_visit">Home Visit</option>
+            </select>
+            <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="border px-3 py-2 rounded">
+              <option value="">Status</option>
+              <option value="ya">Lolos</option>
+              <option value="tidak">Tidak Lolos</option>
+              <option value="pending">Pending</option>
+            </select>
+            <button
+              onClick={async () => {
+                if (!selectedTest || !selectedStatus) {
+                  alert('Pilih tes dan status dulu');
+                  return;
+                }
+
+                for (const id of selectedIds) {
+                  await fetch(`https://backend_spmb.smktibazma.sch.id/api/pengumuman/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      [selectedTest]: selectedStatus,
+                    }),
+                  });
+                }
+
+                alert('Berhasil update');
+
+                setSelectedIds([]);
+              }}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Update Tes
+            </button>
+          </div>
           <table className="min-w-full border-collapse text-sm sm:text-base">
             <thead className="bg-gray-100">
               <tr>
@@ -255,11 +333,12 @@ export default function DataAkhirPage() {
                 <th className="px-3 sm:px-4 py-2 text-center">Keputusan</th>
                 <th className="px-3 sm:px-4 py-2 text-center">Action</th>
                 <th className="px-4 py-2 text-center">Tes</th>
+                <th className="px-3 py-2 text-center">Pilih</th>
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((s) => (
-                <tr key={s.user_id} className="border-b last:border-0 hover:bg-gray-50 text-xs sm:text-sm">
+              {filteredStudents.map((s, index) => (
+                <tr key={index} className="border-b last:border-0 hover:bg-gray-50 text-xs sm:text-sm">
                   <td className="px-3 sm:px-4 py-2 font-mono text-green-600">{s.nisn || '-'}</td>
                   <td className="px-3 sm:px-4 py-2">{s.name || '-'}</td>
                   <td className="px-3 sm:px-4 py-2 text-center font-semibold">
@@ -315,6 +394,21 @@ export default function DataAkhirPage() {
                     >
                       Update Pengumuman
                     </button>
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(Number(s.user_id))}
+                      onChange={(e) => {
+                        const id = Number(s.user_id);
+
+                        if (e.target.checked) {
+                          setSelectedIds((prev) => [...prev, id]);
+                        } else {
+                          setSelectedIds((prev) => prev.filter((i) => i !== id));
+                        }
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
